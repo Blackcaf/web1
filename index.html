@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Проверка попадания точки в область</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <h1>Лабораторная работа №1</h1>
+        <div class="student-info">
+            <span>ФИО: Мантуш Даниил Валерьевич</span>
+            <span>Группа: P3219</span>
+            <span>Вариант: 434931</span>
+        </div>
+    </header>
+
+    <main>
+        <div class="container">
+            <div class="form-section">
+                <h2>Параметры точки</h2>
+                <form id="pointForm">
+                    <div class="form-group">
+                        <label for="x-select">Координата X:</label>
+                        <div class="button-group" id="x-buttons">
+                            <button type="button" class="x-button" data-value="-2">-2</button>
+                            <button type="button" class="x-button" data-value="-1.5">-1.5</button>
+                            <button type="button" class="x-button" data-value="-1">-1</button>
+                            <button type="button" class="x-button" data-value="-0.5">-0.5</button>
+                            <button type="button" class="x-button" data-value="0">0</button>
+                            <button type="button" class="x-button" data-value="0.5">0.5</button>
+                            <button type="button" class="x-button" data-value="1">1</button>
+                            <button type="button" class="x-button" data-value="1.5">1.5</button>
+                            <button type="button" class="x-button" data-value="2">2</button>
+                        </div>
+                        <input type="hidden" id="x-value" name="x" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="y-input">Координата Y (от -3 до 5):</label>
+                        <input type="text" id="y-input" name="y" placeholder="Введите Y" required>
+                        <span class="error-message" id="y-error"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Радиус R:</label>
+                        <div class="radio-group">
+                            <label class="radio-label">
+                                <input type="radio" name="r" value="1" required> 1
+                            </label>
+                            <label class="radio-label">
+                                <input type="radio" name="r" value="1.5" required> 1.5
+                            </label>
+                            <label class="radio-label">
+                                <input type="radio" name="r" value="2" required> 2
+                            </label>
+                            <label class="radio-label">
+                                <input type="radio" name="r" value="2.5" required> 2.5
+                            </label>
+                            <label class="radio-label">
+                                <input type="radio" name="r" value="3" required> 3
+                            </label>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="submit-btn">Проверить</button>
+                </form>
+            </div>
+
+            <div class="graph-section">
+                <h2>График области</h2>
+                <canvas id="graph" width="400" height="400"></canvas>
+                <div id="current-params">
+                    <p>X: <span id="current-x">-</span></p>
+                    <p>Y: <span id="current-y">-</span></p>
+                    <p>R: <span id="current-r">-</span></p>
+                </div>
+            </div>
+        </div>
+
+        <div class="results-section">
+            <h2>История результатов</h2>
+            <table id="resultsTable">
+                <thead>
+                    <tr>
+                        <th>X</th>
+                        <th>Y</th>
+                        <th>R</th>
+                        <th>Результат</th>
+                        <th>Время запроса</th>
+                        <th>Время выполнения</th>
+                    </tr>
+                </thead>
+                <tbody id="resultsBody">
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,356 @@
+/* Основные стили */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    color: #333;
+}
+
+/* Шапка */
+header {
+    background: rgba(255, 255, 255, 0.95);
+    padding: 20px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    margin-bottom: 30px;
+}
+
+header h1 {
+    font-family: cursive;
+    color: #5a67d8;
+    font-size: 2.5em;
+    text-align: center;
+    margin-bottom: 15px;
+}
+
+.student-info {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    flex-wrap: wrap;
+}
+
+.student-info span {
+    font-family: cursive;
+    color: #764ba2;
+    font-size: 1.2em;
+    font-weight: 500;
+}
+
+/* Основной контейнер */
+.container {
+    display: flex;
+    gap: 30px;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+/* Секция формы */
+.form-section {
+    background: white;
+    border-radius: 15px;
+    padding: 30px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    flex: 1;
+    min-width: 300px;
+    max-width: 500px;
+}
+
+.form-section h2 {
+    color: #5a67d8;
+    margin-bottom: 25px;
+    text-align: center;
+}
+
+/* Группы формы */
+.form-group {
+    margin-bottom: 25px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 10px;
+    color: #555;
+    font-weight: 600;
+}
+
+/* Кнопки выбора X */
+.button-group {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.x-button {
+    padding: 10px;
+    border: 2px solid #5a67d8;
+    background: white;
+    color: #5a67d8;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 600;
+}
+
+.x-button:hover {
+    background: #5a67d8;
+    color: white;
+    transform: translateY(-2px);
+}
+
+.x-button.selected {
+    background: #5a67d8;
+    color: white;
+}
+
+/* Поле ввода Y */
+#y-input {
+    width: 100%;
+    padding: 12px 15px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 16px;
+    transition: border-color 0.3s ease;
+    margin-left: 5%;
+    margin-right: 5%;
+    width: 90%;
+}
+
+#y-input:focus {
+    outline: none;
+    border-color: #5a67d8;
+}
+
+#y-input.error {
+    border-color: #e53e3e;
+}
+
+.error-message {
+    color: #e53e3e;
+    font-size: 14px;
+    margin-top: 5px;
+    display: block;
+    min-height: 20px;
+}
+
+/* Радио-кнопки */
+.radio-group {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+    justify-content: space-around;
+    margin-top: 10px;
+}
+
+.radio-label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    padding: 8px 15px;
+    border: 2px solid #e0e0e0;
+    border-radius: 20px;
+    transition: all 0.3s ease;
+}
+
+.radio-label:hover {
+    border-color: #5a67d8;
+    background: #f7fafc;
+}
+
+.radio-label input[type="radio"] {
+    margin-right: 8px;
+    cursor: pointer;
+}
+
+.radio-label:has(input:checked) {
+    background: #5a67d8;
+    color: white;
+    border-color: #5a67d8;
+}
+
+/* Кнопка отправки */
+.submit-btn {
+    width: 100%;
+    padding: 15px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 18px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 20px;
+}
+
+.submit-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+}
+
+.submit-btn:active {
+    transform: translateY(0);
+}
+
+/* Секция графика */
+.graph-section {
+    background: white;
+    border-radius: 15px;
+    padding: 30px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    flex: 1;
+    min-width: 300px;
+    max-width: 500px;
+}
+
+.graph-section h2 {
+    color: #5a67d8;
+    margin-bottom: 25px;
+    text-align: center;
+}
+
+#graph {
+    display: block;
+    margin: 0 auto;
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    background: white;
+}
+
+#current-params {
+    display: flex;
+    justify-content: space-around;
+    margin-top: 20px;
+    padding: 15px;
+    background: #f7fafc;
+    border-radius: 10px;
+}
+
+#current-params p {
+    font-weight: 600;
+    color: #555;
+}
+
+#current-params span {
+    color: #5a67d8;
+    font-weight: bold;
+}
+
+/* Секция результатов */
+.results-section {
+    width: 100%;
+    max-width: 1200px;
+    margin: 30px auto;
+    padding: 0 20px;
+}
+
+.results-section h2 {
+    color: white;
+    text-align: center;
+    margin-bottom: 25px;
+    font-size: 1.8em;
+}
+
+/* Таблица результатов */
+#resultsTable {
+    width: 100%;
+    background: white;
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+#resultsTable thead {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+#resultsTable th {
+    padding: 15px;
+    text-align: left;
+    font-weight: 600;
+}
+
+#resultsTable tbody tr {
+    border-bottom: 1px solid #e0e0e0;
+    transition: background-color 0.3s ease;
+}
+
+#resultsTable tbody tr:hover {
+    background-color: #f7fafc;
+}
+
+#resultsTable tbody tr:last-child {
+    border-bottom: none;
+}
+
+#resultsTable td {
+    padding: 15px;
+    color: #555;
+}
+
+/* Цвета для результатов */
+.result-hit {
+    color: #48bb78;
+    font-weight: 600;
+}
+
+.result-miss {
+    color: #e53e3e;
+    font-weight: 600;
+}
+
+/* Анимация появления строк таблицы */
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+#resultsTable tbody tr {
+    animation: slideIn 0.5s ease;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    .container {
+        flex-direction: column;
+    }
+    
+    .button-group {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    header h1 {
+        font-size: 2em;
+    }
+    
+    .student-info {
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    #resultsTable {
+        font-size: 14px;
+    }
+    
+    #resultsTable th,
+    #resultsTable td {
+        padding: 10px 5px;
+    }
+}

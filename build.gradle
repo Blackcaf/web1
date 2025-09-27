@@ -30,3 +30,8 @@ jar {
     }
     archiveFileName = 'app.jar'
 }
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}

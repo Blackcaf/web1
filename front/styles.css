@@ -4,7 +4,7 @@
 /* iOS переменные */
 :root {
     /* iOS цвета */
-    --ios-blue: #007AFF;
+    --ios-blue: rgba(115, 37, 252, 0.47);
     --ios-blue-light: #5AC8FA;
     --ios-purple: #AF52DE;
     --ios-pink: #FF2D92;
@@ -142,11 +142,10 @@ body {
 }
 
 .info-card {
-    background: rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0);
     padding: 16px 20px;
     border-radius: var(--ios-radius-medium);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    text-align: right;
+    border: 1px solid rgba(255, 255, 255, 0);
     backdrop-filter: blur(10px);
 }
 
@@ -424,9 +423,9 @@ section {
 }
 
 .submit-btn:hover {
-    background: #0056CC;
+    background: rgba(170, 0, 255, 0.71);
     transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(0, 122, 255, 0.4);
+    box-shadow: 0 8px 24px rgba(191, 0, 255, 0.4);
 }
 
 .submit-btn:active {
@@ -447,7 +446,7 @@ section {
     overflow: hidden;
     box-shadow: var(--ios-shadow-large);
     transition: all var(--ios-duration) var(--ios-ease);
-    background: white;
+    background: transparent;
     display: inline-block; /* Важно для корректного размера */
 }
 
@@ -458,7 +457,7 @@ section {
 
 #coordinatePlane {
     display: block;
-    background: white;
+    background: transparent;
     cursor: crosshair;
     width: 600px; /* Фиксированная ширина */
     height: 600px; /* Фиксированная высота */

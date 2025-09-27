@@ -2,25 +2,34 @@
 let canvas;
 let ctx;
 let canvasSize = 600;
-let center;
-let scale;
+let center = 300;
+let scale = 60; // Упрощенный масштаб: 1 единица = 60 пикселей
 let points = [];
 
 // Инициализация canvas при загрузке
 document.addEventListener('DOMContentLoaded', function() {
-    initializeCanvas();
+    setTimeout(() => {
+        initializeCanvas();
+    }, 200);
 });
 
 // Инициализация canvas
 function initializeCanvas() {
+    console.log('Инициализация canvas...');
+
     canvas = document.getElementById('coordinatePlane');
-    if (!canvas) return;
+    if (!canvas) {
+        console.error('Canvas element not found');
+        return;
+    }
 
     ctx = canvas.getContext('2d');
-    center = canvasSize / 2;
+    if (!ctx) {
+        console.error('Could not get canvas context');
+        return;
+    }
 
-    // Увеличенный масштаб - теперь график больше!
-    scale = canvasSize / 8; // Показываем от -4 до +4, но график крупнее
+    console.log('Canvas инициализирован успешно');
 
     // Обработчик клика по canvas
     canvas.addEventListener('click', handleCanvasClick);
@@ -29,150 +38,146 @@ function initializeCanvas() {
     drawCoordinatePlane();
 }
 
-// Отрисовка координатной плоскости
+// Основная функция отрисовки
 function drawCoordinatePlane() {
-    // Очистка canvas
-    ctx.clearRect(0, 0, canvasSize, canvasSize);
-
-    // Заливка фона
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(0, 0, canvasSize, canvasSize);
-
-    // Отрисовка областей
-    if (window.currentR && window.currentR()) {
-        drawAreas(window.currentR());
+    if (!ctx) {
+        console.error('Canvas context not available');
+        return;
     }
 
-    // Отрисовка сетки
-    drawGrid();
+    console.log('Отрисовка координатной плоскости...');
 
-    // Отрисовка осей
-    drawAxes();
+    try {
+        // Очистка canvas
+        ctx.clearRect(0, 0, canvasSize, canvasSize);
 
-    // Отрисовка меток с R-шкалой
-    drawLabelsWithRScale();
+        // Заливка фона
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, canvasSize, canvasSize);
 
-    // Отрисовка всех точек
-    drawAllPoints();
+        // Отрисовка всех точек
+        function drawAllPoints() {
+            if (!ctx || !points.length) return;
+
+            console.log(`Отрисовка ${points.length} точек`);
+
+            points.forEach(point => {
+                if (typeof point.x === 'number' && typeof point.y === 'number') {
+                    drawSinglePoint(point.x, point.y, point.hit);
+                }
+            });
+        }
+
+// Отрисовка одной точки
+        function drawSinglePoint(x, y, hit) {
+            if (!ctx) return;
+
+            const pixelX = center + x * scale;
+            const pixelY = center - y * scale; // Инвертируем Y
+
+            ctx.save();
+
+            ctx.fillStyle = hit ? '#34C759' : '#FF3B30';
+            ctx.strokeStyle = hit ? '#30A14E' : '#D60A00';
+            ctx.lineWidth = 3;
+
+            ctx.beginPath();
+            ctx.arc(pixelX, pixelY, 8, 0, 2 * Math.PI);
+            ctx.fill();
+            ctx.stroke();
+
+            ctx.restore();
+        }
+
+// Очистка canvas
+        function clearCanvas() {
+            console.log('Очистка canvas');
+            points = [];
+            drawCoordinatePlane();
+        }
+
+// Экспорт функций
+        window.drawCoordinatePlane = drawCoordinatePlane;
+        window.addPointToCanvas = addPointToCanvas;
+        window.clearCanvas = clearCanvas;овка сетки
+        drawGrid();
+
+        // Отрисовка осей
+        drawAxes();
+
+        // Отрисовка областей если R выбран
+        const currentRValue = window.currentR ? window.currentR() : null;
+        if (currentRValue && currentRValue > 0) {
+            drawAreas(currentRValue);
+        }
+
+        // Отрисовка меток с R-шкалой
+        drawLabelsWithRScale();
+
+        // Отрисовка точек
+        drawAllPoints();
+
+        console.log('Координатная плоскость отрисована успешно');
+    } catch (error) {
+        console.error('Ошибка при отрисовке:', error);
+    }
 }
 
-// ⭐ ИСПРАВЛЕННЫЕ ОБЛАСТИ - четверть круга СЛЕВА СНИЗУ ⭐
-function drawAreas(r) {
-    const rPixels = r * scale; // R в пикселях
-    const halfRPixels = rPixels / 2; // R/2 в пикселях
-
-    ctx.save();
-    ctx.globalAlpha = 0.4;
-
-    // 🔵 ОБЛАСТЬ 1: Прямоугольник СЛЕВА СВЕРХУ (2-й квадрант)
-    // X: от -R/2 до 0, Y: от 0 до R
-    ctx.fillStyle = '#4A90E2'; // Синий
-    ctx.fillRect(
-        center - halfRPixels,  // x = -R/2
-        center - rPixels,      // y = R (помним, что Y инвертирован)
-        halfRPixels,           // width = R/2
-        rPixels                // height = R
-    );
-
-    // 🟠 ОБЛАСТЬ 2: Четверть круга СЛЕВА СНИЗУ (3-й квадрант) - ИСПРАВЛЕНО!
-    // Радиус R/2, центр в (0,0)
-    ctx.fillStyle = '#FF9500'; // Оранжевый
-    ctx.beginPath();
-    ctx.arc(center, center, halfRPixels, Math.PI, 3*Math.PI/2); // от 180° до 270°
-    ctx.lineTo(center, center); // линия к центру
-    ctx.closePath();
-    ctx.fill();
-
-    // 🟢 ОБЛАСТЬ 3: Треугольник СПРАВА СНИЗУ (4-й квадрант)
-    // X: от 0 до R/2, Y: от 0 до -R
-    ctx.fillStyle = '#34C759'; // Зеленый
-    ctx.beginPath();
-    ctx.moveTo(center, center);                    // (0, 0)
-    ctx.lineTo(center + halfRPixels, center);      // (R/2, 0)
-    ctx.lineTo(center, center + rPixels);          // (0, -R)
-    ctx.closePath();
-    ctx.fill();
-
-    ctx.restore();
-
-    // Контуры областей
-    ctx.strokeStyle = '#1D1D1F';
-    ctx.lineWidth = 2.5;
-    ctx.globalAlpha = 1;
-
-    // Контур прямоугольника
-    ctx.strokeRect(
-        center - halfRPixels,
-        center - rPixels,
-        halfRPixels,
-        rPixels
-    );
-
-    // Контур четверти круга
-    ctx.beginPath();
-    ctx.arc(center, center, halfRPixels, Math.PI, 3*Math.PI/2);
-    ctx.stroke();
-
-    // Контур треугольника
-    ctx.beginPath();
-    ctx.moveTo(center, center);
-    ctx.lineTo(center + halfRPixels, center);
-    ctx.lineTo(center, center + rPixels);
-    ctx.closePath();
-    ctx.stroke();
-}
-
-// Отрисовка сетки с R-делениями
+// Отрисовка сетки
 function drawGrid() {
-    const currentR = window.currentR ? window.currentR() : 2; // Дефолтный R для сетки
-    const rPixels = currentR * scale;
-    const halfRPixels = rPixels / 2;
+    if (!ctx) return;
+
+    const currentRValue = window.currentR ? window.currentR() : 2;
 
     ctx.strokeStyle = '#E5E5E7';
-    ctx.lineWidth = 1;
+    ctx.lineWidth = 0.5;
 
-    // Сетка через R/2
-    const step = halfRPixels;
+    // Мелкая сетка (через R/2)
+    const smallStep = currentRValue * scale / 2;
 
     // Вертикальные линии
-    for (let i = center - 4*rPixels; i <= center + 4*rPixels; i += step) {
-        if (i >= 0 && i <= canvasSize) {
+    for (let i = -10; i <= 10; i++) {
+        const x = center + i * smallStep;
+        if (x >= 0 && x <= canvasSize) {
             ctx.beginPath();
-            ctx.moveTo(i, 0);
-            ctx.lineTo(i, canvasSize);
+            ctx.moveTo(x, 0);
+            ctx.lineTo(x, canvasSize);
             ctx.stroke();
         }
     }
 
     // Горизонтальные линии
-    for (let i = center - 4*rPixels; i <= center + 4*rPixels; i += step) {
-        if (i >= 0 && i <= canvasSize) {
+    for (let i = -10; i <= 10; i++) {
+        const y = center + i * smallStep;
+        if (y >= 0 && y <= canvasSize) {
             ctx.beginPath();
-            ctx.moveTo(0, i);
-            ctx.lineTo(canvasSize, i);
+            ctx.moveTo(0, y);
+            ctx.lineTo(canvasSize, y);
             ctx.stroke();
         }
     }
 
-    // Более толстые линии для R-делений
+    // Основная сетка (через R)
     ctx.strokeStyle = '#D1D1D6';
-    ctx.lineWidth = 1.5;
+    ctx.lineWidth = 1;
 
-    // Линии через R
-    const mainStep = rPixels;
+    const mainStep = currentRValue * scale;
 
-    for (let i = center - 4*rPixels; i <= center + 4*rPixels; i += mainStep) {
-        if (i >= 0 && i <= canvasSize) {
-            // Вертикальные
+    for (let i = -5; i <= 5; i++) {
+        const x = center + i * mainStep;
+        const y = center + i * mainStep;
+
+        if (x >= 0 && x <= canvasSize) {
             ctx.beginPath();
-            ctx.moveTo(i, 0);
-            ctx.lineTo(i, canvasSize);
+            ctx.moveTo(x, 0);
+            ctx.lineTo(x, canvasSize);
             ctx.stroke();
+        }
 
-            // Горизонтальные
+        if (y >= 0 && y <= canvasSize) {
             ctx.beginPath();
-            ctx.moveTo(0, i);
-            ctx.lineTo(canvasSize, i);
+            ctx.moveTo(0, y);
+            ctx.lineTo(canvasSize, y);
             ctx.stroke();
         }
     }
@@ -180,6 +185,8 @@ function drawGrid() {
 
 // Отрисовка осей координат
 function drawAxes() {
+    if (!ctx) return;
+
     ctx.strokeStyle = '#1D1D1F';
     ctx.lineWidth = 3;
 
@@ -195,237 +202,232 @@ function drawAxes() {
     ctx.lineTo(center, canvasSize);
     ctx.stroke();
 
-    // Стрелки осей
-    drawArrow(canvasSize - 20, center, canvasSize - 5, center); // X
-    drawArrow(center, 20, center, 5); // Y
-}
-
-// Отрисовка стрелки
-function drawArrow(x1, y1, x2, y2) {
-    ctx.strokeStyle = '#1D1D1F';
-    ctx.lineWidth = 3;
-    ctx.fillStyle = '#1D1D1F';
-
-    const angle = Math.atan2(y2 - y1, x2 - x1);
-    const arrowLength = 15;
-
+    // Стрелки
+    // Стрелка X
     ctx.beginPath();
-    ctx.moveTo(x2 - arrowLength * Math.cos(angle - Math.PI/6), y2 - arrowLength * Math.sin(angle - Math.PI/6));
-    ctx.lineTo(x2, y2);
-    ctx.lineTo(x2 - arrowLength * Math.cos(angle + Math.PI/6), y2 - arrowLength * Math.sin(angle + Math.PI/6));
+    ctx.moveTo(canvasSize - 15, center - 5);
+    ctx.lineTo(canvasSize - 5, center);
+    ctx.lineTo(canvasSize - 15, center + 5);
+    ctx.stroke();
+
+    // Стрелка Y
+    ctx.beginPath();
+    ctx.moveTo(center - 5, 15);
+    ctx.lineTo(center, 5);
+    ctx.lineTo(center + 5, 15);
     ctx.stroke();
 }
 
-// 📏 R-ШКАЛА ВМЕСТО ЦИФР
+// ИСПРАВЛЕННАЯ отрисовка областей
+function drawAreas(r) {
+    if (!ctx || !r || r <= 0) return;
+
+    console.log('Отрисовка областей для R =', r);
+
+    const rPixels = r * scale;
+    const halfRPixels = rPixels / 2;
+
+    ctx.save();
+    ctx.globalAlpha = 0.4;
+
+    try {
+        // 1. ПРЯМОУГОЛЬНИК (2-й квадрант): x от -R/2 до 0, y от 0 до R
+        ctx.fillStyle = '#4A90E2'; // Синий
+        ctx.fillRect(
+            center - halfRPixels,  // x = -R/2
+            center - rPixels,      // y = R (инвертированная Y)
+            halfRPixels,           // width = R/2
+            rPixels                // height = R
+        );
+
+        // 2. ЧЕТВЕРТЬ КРУГА СЛЕВА СНИЗУ (3-й квадрант) - ИСПРАВЛЕНО!
+        // Радиус R/2, от π (180°) до 3π/2 (270°)
+        ctx.fillStyle = '#FF9500'; // Оранжевый
+        ctx.beginPath();
+        ctx.arc(center, center, halfRPixels, Math.PI, 3 * Math.PI / 2);
+        ctx.lineTo(center, center);
+        ctx.closePath();
+        ctx.fill();
+
+        // 3. ТРЕУГОЛЬНИК (4-й квадрант): от (0,0) до (R/2,0) до (0,-R)
+        ctx.fillStyle = '#34C759'; // Зеленый
+        ctx.beginPath();
+        ctx.moveTo(center, center);                    // (0, 0)
+        ctx.lineTo(center + halfRPixels, center);      // (R/2, 0)
+        ctx.lineTo(center, center + rPixels);          // (0, -R)
+        ctx.closePath();
+        ctx.fill();
+
+    } catch (error) {
+        console.error('Ошибка при отрисовке областей:', error);
+    }
+
+    ctx.restore();
+
+    // Контуры областей
+    ctx.strokeStyle = '#1D1D1F';
+    ctx.lineWidth = 2;
+    ctx.globalAlpha = 1;
+
+    // Контур прямоугольника
+    ctx.strokeRect(center - halfRPixels, center - rPixels, halfRPixels, rPixels);
+
+    // Контур четверти круга
+    ctx.beginPath();
+    ctx.arc(center, center, halfRPixels, Math.PI, 3 * Math.PI / 2);
+    ctx.stroke();
+
+    // Контур треугольника
+    ctx.beginPath();
+    ctx.moveTo(center, center);
+    ctx.lineTo(center + halfRPixels, center);
+    ctx.lineTo(center, center + rPixels);
+    ctx.closePath();
+    ctx.stroke();
+}
+
+// ИСПРАВЛЕННАЯ R-шкала с промежуточными делениями
 function drawLabelsWithRScale() {
-    const currentR = window.currentR ? window.currentR() : null;
+    if (!ctx) return;
+
+    const currentRValue = window.currentR ? window.currentR() : null;
 
     // Если R не выбран, показываем обычные цифры
-    if (!currentR) {
+    if (!currentRValue) {
         drawRegularLabels();
         return;
     }
 
-    const rPixels = currentR * scale;
-    const halfRPixels = rPixels / 2;
-
     ctx.fillStyle = '#1D1D1F';
-    ctx.font = 'bold 16px -apple-system, BlinkMacSystemFont, sans-serif';
+    ctx.font = 'bold 14px -apple-system, BlinkMacSystemFont, sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
 
-    // R-деления на осях
+    // R-деления с промежуточными значениями
     const rDivisions = [
-        { value: -2, label: '-2R', pixels: -2 * rPixels },
-        { value: -1.5, label: '-3R/2', pixels: -1.5 * rPixels },
-        { value: -1, label: '-R', pixels: -rPixels },
-        { value: -0.5, label: '-R/2', pixels: -halfRPixels },
-        { value: 0.5, label: 'R/2', pixels: halfRPixels },
-        { value: 1, label: 'R', pixels: rPixels },
-        { value: 1.5, label: '3R/2', pixels: 1.5 * rPixels },
-        { value: 2, label: '2R', pixels: 2 * rPixels }
+        { value: -2, label: '-2R', pixels: -2 * currentRValue * scale, color: '#666666' },
+        { value: -1.5, label: '-3R/2', pixels: -1.5 * currentRValue * scale, color: '#999999' },
+        { value: -1, label: '-R', pixels: -1 * currentRValue * scale, color: '#007AFF' },
+        { value: -0.5, label: '-R/2', pixels: -0.5 * currentRValue * scale, color: '#FF9500' },
+        { value: 0.5, label: 'R/2', pixels: 0.5 * currentRValue * scale, color: '#FF9500' },
+        { value: 1, label: 'R', pixels: 1 * currentRValue * scale, color: '#007AFF' },
+        { value: 1.5, label: '3R/2', pixels: 1.5 * currentRValue * scale, color: '#999999' },
+        { value: 2, label: '2R', pixels: 2 * currentRValue * scale, color: '#666666' }
     ];
 
     rDivisions.forEach(div => {
         // Метки на оси X
         const x = center + div.pixels;
-        if (x >= 40 && x <= canvasSize - 40) {
-            // Цвет метки в зависимости от значения
-            if (div.value === 1 || div.value === -1) {
-                ctx.fillStyle = '#007AFF'; // Синий для R
-            } else if (div.value === 0.5 || div.value === -0.5) {
-                ctx.fillStyle = '#FF9500'; // Оранжевый для R/2
-            } else {
-                ctx.fillStyle = '#666666'; // Серый для остальных
-            }
-
-            ctx.fillText(div.label, x, center + 30);
+        if (x >= 50 && x <= canvasSize - 50) {
+            ctx.fillStyle = div.color;
+            ctx.fillText(div.label, x, center + 25);
 
             // Деления на оси X
-            ctx.strokeStyle = ctx.fillStyle;
-            ctx.lineWidth = div.value === 1 || div.value === -1 || div.value === 0.5 || div.value === -0.5 ? 3 : 2;
+            ctx.strokeStyle = div.color;
+            ctx.lineWidth = (div.value === 1 || div.value === -1 || div.value === 0.5 || div.value === -0.5) ? 3 : 2;
             ctx.beginPath();
-            ctx.moveTo(x, center - 12);
-            ctx.lineTo(x, center + 12);
+            ctx.moveTo(x, center - 8);
+            ctx.lineTo(x, center + 8);
             ctx.stroke();
         }
 
         // Метки на оси Y
         const y = center - div.pixels; // Инвертируем для Y
-        if (y >= 40 && y <= canvasSize - 40) {
-            // Цвет метки
-            if (div.value === 1 || div.value === -1) {
-                ctx.fillStyle = '#007AFF'; // Синий для R
-            } else if (div.value === 0.5 || div.value === -0.5) {
-                ctx.fillStyle = '#FF9500'; // Оранжевый для R/2
-            } else {
-                ctx.fillStyle = '#666666'; // Серый для остальных
-            }
-
-            ctx.fillText(div.label, center - 35, y);
+        if (y >= 50 && y <= canvasSize - 50) {
+            ctx.fillStyle = div.color;
+            ctx.fillText(div.label, center - 30, y);
 
             // Деления на оси Y
-            ctx.strokeStyle = ctx.fillStyle;
-            ctx.lineWidth = div.value === 1 || div.value === -1 || div.value === 0.5 || div.value === -0.5 ? 3 : 2;
+            ctx.strokeStyle = div.color;
+            ctx.lineWidth = (div.value === 1 || div.value === -1 || div.value === 0.5 || div.value === -0.5) ? 3 : 2;
             ctx.beginPath();
-            ctx.moveTo(center - 12, y);
-            ctx.lineTo(center + 12, y);
+            ctx.moveTo(center - 8, y);
+            ctx.lineTo(center + 8, y);
             ctx.stroke();
         }
     });
 
     // Подписи осей
-    ctx.font = 'bold 20px -apple-system, BlinkMacSystemFont, sans-serif';
+    ctx.font = 'bold 18px -apple-system, BlinkMacSystemFont, sans-serif';
     ctx.fillStyle = '#1D1D1F';
-    ctx.fillText('X', canvasSize - 35, center - 25);
-    ctx.fillText('Y', center + 25, 35);
-    ctx.fillText('0', center - 25, center + 25);
+    ctx.fillText('X', canvasSize - 30, center - 20);
+    ctx.fillText('Y', center + 20, 30);
+    ctx.fillText('0', center - 20, center + 20);
 }
 
 // Обычные цифровые метки (если R не выбран)
 function drawRegularLabels() {
+    if (!ctx) return;
+
     ctx.fillStyle = '#1D1D1F';
-    ctx.font = 'bold 16px -apple-system, BlinkMacSystemFont, sans-serif';
+    ctx.font = '14px Arial';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
 
     // Основные деления
-    const divisions = [-3, -2, -1, 1, 2, 3];
+    const divisions = [-4, -3, -2, -1, 1, 2, 3, 4];
 
     divisions.forEach(i => {
         const x = center + i * scale;
         const y = center - i * scale;
 
         // Метки на оси X
-        if (x >= 20 && x <= canvasSize - 20) {
-            ctx.fillText(i.toString(), x, center + 25);
-
-            ctx.strokeStyle = '#1D1D1F';
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.moveTo(x, center - 10);
-            ctx.lineTo(x, center + 10);
-            ctx.stroke();
+        if (x >= 30 && x <= canvasSize - 30) {
+            ctx.fillText(i.toString(), x, center + 20);
         }
 
         // Метки на оси Y
-        if (y >= 20 && y <= canvasSize - 20) {
-            ctx.fillText(i.toString(), center - 25, y);
-
-            ctx.strokeStyle = '#1D1D1F';
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.moveTo(center - 10, y);
-            ctx.lineTo(center + 10, y);
-            ctx.stroke();
+        if (y >= 30 && y <= canvasSize - 30) {
+            ctx.fillText(i.toString(), center - 20, y);
         }
     });
 
     // Подписи осей
-    ctx.font = 'bold 20px -apple-system, BlinkMacSystemFont, sans-serif';
-    ctx.fillStyle = '#1D1D1F';
-    ctx.fillText('X', canvasSize - 35, center - 25);
-    ctx.fillText('Y', center + 25, 35);
-    ctx.fillText('0', center - 25, center + 25);
+    ctx.font = 'bold 16px Arial';
+    ctx.fillText('X', canvasSize - 30, center - 20);
+    ctx.fillText('Y', center + 20, 30);
+    ctx.fillText('0', center - 20, center + 20);
 }
 
-// Обработка клика по canvas
+// Обработка клика
 function handleCanvasClick(event) {
+    if (!canvas) return;
+
+    console.log('Клик по canvas');
+
     const rect = canvas.getBoundingClientRect();
     const x = event.clientX - rect.left;
     const y = event.clientY - rect.top;
 
-    // Преобразование пиксельных координат в математические
+    // Преобразование в математические координаты
     const mathX = (x - center) / scale;
     const mathY = -(y - center) / scale; // Инвертируем Y
 
-    // Округление до разумной точности (0.1)
     const roundedX = Math.round(mathX * 10) / 10;
     const roundedY = Math.round(mathY * 10) / 10;
 
-    console.log(`Клик: пиксели (${x.toFixed(1)}, ${y.toFixed(1)}) -> координаты (${roundedX}, ${roundedY})`);
+    console.log(`Координаты: (${roundedX}, ${roundedY})`);
 
-    // Вызов функции добавления точки из main script
     if (window.addPointFromCanvas) {
         window.addPointFromCanvas(roundedX, roundedY);
     }
 }
 
-// Добавление точки на canvas
+// Добавление точки
 function addPointToCanvas(x, y, hit, r) {
-    points.push({ x, y, hit, r });
-    drawPoint(x, y, hit, r);
-}
+    console.log(`Добавление точки: (${x}, ${y}), hit: ${hit}`);
 
-// Отрисовка одной точки
-function drawPoint(x, y, hit, r) {
-    const pixelX = center + x * scale;
-    const pixelY = center - y * scale; // Инвертируем Y
-
-    ctx.save();
-
-    // Цвет точки в зависимости от попадания
-    ctx.fillStyle = hit ? '#34C759' : '#FF3B30'; // iOS цвета
-    ctx.strokeStyle = hit ? '#30A14E' : '#D60A00';
-    ctx.lineWidth = 3;
-
-    // Отрисовка точки (увеличенной)
-    ctx.beginPath();
-    ctx.arc(pixelX, pixelY, 10, 0, 2 * Math.PI);
-    ctx.fill();
-    ctx.stroke();
-
-    // Подсветка для последней добавленной точки
-    if (points.length > 0 && points[points.length - 1].x === x && points[points.length - 1].y === y) {
-        ctx.strokeStyle = '#FF9500';
-        ctx.lineWidth = 4;
-        ctx.beginPath();
-        ctx.arc(pixelX, pixelY, 15, 0, 2 * Math.PI);
-        ctx.stroke();
-
-        // Анимация пульсации
-        setTimeout(() => {
-            drawCoordinatePlane();
-        }, 2000);
+    if (typeof x !== 'number' || typeof y !== 'number') {
+        console.error('Некорректные координаты точки');
+        return;
     }
 
-    ctx.restore();
+    points.push({ x, y, hit, r });
+
+    // Перерисовываем всё
+    setTimeout(() => {
+        drawCoordinatePlane();
+    }, 10);
 }
 
-// Отрисовка всех точек
-function drawAllPoints() {
-    points.forEach(point => {
-        drawPoint(point.x, point.y, point.hit, point.r);
-    });
-}
-
-// Очистка canvas
-function clearCanvas() {
-    points = [];
-    drawCoordinatePlane();
-}
-
-// Экспорт функций
-window.drawCoordinatePlane = drawCoordinatePlane;
-window.addPointToCanvas = addPointToCanvas;
-window.clearCanvas = clearCanvas;
+// Отрис

@@ -448,6 +448,7 @@ section {
     box-shadow: var(--ios-shadow-large);
     transition: all var(--ios-duration) var(--ios-ease);
     background: white;
+    display: inline-block; /* Важно для корректного размера */
 }
 
 .canvas-wrapper:hover {
@@ -459,8 +460,8 @@ section {
     display: block;
     background: white;
     cursor: crosshair;
-    max-width: 100%;
-    height: auto;
+    width: 600px; /* Фиксированная ширина */
+    height: 600px; /* Фиксированная высота */
 }
 
 .canvas-info {
@@ -756,6 +757,27 @@ section {
     font-weight: 600;
     margin: 0;
 }
+@media (max-width: 1400px) {
+    .main-container {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto auto auto;
+    }
+
+    .input-section {
+        grid-column: 1;
+        grid-row: 1;
+    }
+
+    .canvas-section {
+        grid-column: 1;
+        grid-row: 2;
+    }
+
+    .results-section {
+        grid-column: 1;
+        grid-row: 3;
+    }
+}
 @media (min-width: 1024px) {
     #coordinatePlane {
         width: 600px;
@@ -771,17 +793,33 @@ section {
     }
 }
 
-/* Для телефонов */
 @media (max-width: 768px) {
+    #coordinatePlane {
+        width: 500px;
+        height: 500px;
+    }
+
+    .canvas-section {
+        padding: 24px 16px;
+    }
+}
+@media (max-width: 600px) {
     #coordinatePlane {
         width: 400px;
         height: 400px;
     }
 }
-
 @media (max-width: 480px) {
     #coordinatePlane {
         width: 350px;
         height: 350px;
+    }
+
+    .main-container {
+        padding: 0 16px;
+    }
+
+    section {
+        padding: 24px 16px;
     }
 }

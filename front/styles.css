@@ -822,3 +822,45 @@ section {
         padding: 24px 16px;
     }
 }
+/* Модальное окно подтверждения (пункт 3) */
+.modal-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 24px;
+    justify-content: flex-end;
+}
+
+.modal-btn {
+    padding: 12px 24px;
+    border: none;
+    border-radius: var(--ios-radius-medium);
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--ios-duration) var(--ios-ease);
+    font-family: inherit;
+    min-width: 100px;
+}
+
+.modal-btn-primary {
+    background: var(--ios-blue);
+    color: white;
+}
+
+.modal-btn-primary:hover {
+    background: rgba(0, 102, 204, 1);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(0, 122, 255, 0.3);
+}
+
+.modal-btn-secondary {
+    background: rgba(0, 0, 0, 0.05);
+    color: var(--text-primary);
+}
+
+.modal-btn-secondary:hover {
+    background: rgba(0, 0, 0, 0.1);
+    transform: translateY(-1px);
+}
+
+/* Загрузочный индикатор */

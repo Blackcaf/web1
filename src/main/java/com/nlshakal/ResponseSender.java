@@ -3,6 +3,7 @@ package com.nlshakal;
 import com.fastcgi.FCGIInterface;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
@@ -11,53 +12,76 @@ import java.util.Map;
 
 public class ResponseSender {
   private final Checker checker = new Checker();
-
   private final JsonParser parser = new JsonParser();
 
   public void sendResponse() {
     try {
       long startTime = System.nanoTime();
-      if (!"POST".equals(FCGIInterface.request.params.getProperty("REQUEST_METHOD"))) {
-        sendError("POST.");
+
+      // Проверка метода запроса (пункт 6)
+      String method = FCGIInterface.request.params.getProperty("REQUEST_METHOD");
+      if (method == null || !"POST".equalsIgnoreCase(method)) {
+        sendMethodNotAllowed("Only POST method is allowed. Received: " + method);
         return;
       }
+
       BigDecimal[] data = readRequestBody();
       BigDecimal x = data[0];
       BigDecimal y = data[1];
       BigDecimal r = data[2];
-      this.checker.validate(x, y, r);
+
+      // Валидация на сервере (пункт 1)
+      try {
+        this.checker.validate(x, y, r);
+      } catch (IllegalArgumentException e) {
+        sendError(e.getMessage());
+        return;
+      }
+
       boolean hit = this.checker.isHit(x, y, r);
       long endTime = System.nanoTime();
       double scriptTimeMs = (endTime - startTime) / 1000000.0D;
+
       Map<String, Object> response = new LinkedHashMap<>();
+      // Используем toPlainString() для сохранения всех знаков (пункт 5)
       response.put("x", x.toPlainString());
       response.put("y", y.toPlainString());
       response.put("r", r.toPlainString());
       response.put("hit", Boolean.valueOf(hit));
       response.put("currentTime", (new Date()).toString());
-      response.put("scriptTimeMs", String.format("%.2f", new Object[] { Double.valueOf(scriptTimeMs) }));
+      response.put("scriptTimeMs", String.format("%.2f", Double.valueOf(scriptTimeMs)));
+
       sendJson(response);
     } catch (IllegalArgumentException e) {
       sendError(e.getMessage());
     } catch (Exception e) {
-      sendServerError("" + e.getMessage());
+      sendServerError("Server error: " + e.getMessage());
     }
   }
 
   private BigDecimal[] readRequestBody() throws IOException {
     FCGIInterface.request.inStream.fill();
     int length = FCGIInterface.request.inStream.available();
+
+    if (length <= 0) {
+      throw new IllegalArgumentException("Empty request body");
+    }
+
     ByteBuffer buffer = ByteBuffer.allocate(length);
     int readBytes = FCGIInterface.request.inStream.read(buffer.array(), 0, length);
     byte[] raw = new byte[readBytes];
     buffer.get(raw);
     String request = new String(raw, StandardCharsets.UTF_8);
+
     return this.parser.getBigDecimals(request);
   }
 
   private void sendJson(Map<String, Object> map) {
     String json = toJson(map);
-    String httpResponse = "Status: 200 OK\nContent-Type: application/json\nContent-Length: %d\n\n%s\n".formatted(new Object[] { Integer.valueOf((json.getBytes(StandardCharsets.UTF_8)).length), json });
+    String httpResponse = String.format(
+        "Status: 200 OK\nContent-Type: application/json\nAccess-Control-Allow-Origin: *\nContent-Length: %d\n\n%s\n",
+        json.getBytes(StandardCharsets.UTF_8).length, json
+    );
     try {
       System.out.write(httpResponse.getBytes(StandardCharsets.UTF_8));
       System.out.flush();
@@ -67,8 +91,25 @@ public class ResponseSender {
   }
 
   private void sendError(String message) {
-    String json = String.format("{\"error\":\"%s\"}", new Object[] { message });
-    String httpResponse = "Status: 400 Bad Request\nContent-Type: application/json\nContent-Length: %d\n\n%s\n".formatted(new Object[] { Integer.valueOf((json.getBytes(StandardCharsets.UTF_8)).length), json });
+    String json = String.format("{\"error\":\"%s\"}", escapeJson(message));
+    String httpResponse = String.format(
+        "Status: 400 Bad Request\nContent-Type: application/json\nAccess-Control-Allow-Origin: *\nContent-Length: %d\n\n%s\n",
+        json.getBytes(StandardCharsets.UTF_8).length, json
+    );
+    try {
+      System.out.write(httpResponse.getBytes(StandardCharsets.UTF_8));
+      System.out.flush();
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+  }
+
+  private void sendMethodNotAllowed(String message) {
+    String json = String.format("{\"error\":\"%s\"}", escapeJson(message));
+    String httpResponse = String.format(
+        "Status: 405 Method Not Allowed\nContent-Type: application/json\nAccess-Control-Allow-Origin: *\nAllow: POST\nContent-Length: %d\n\n%s\n",
+        json.getBytes(StandardCharsets.UTF_8).length, json
+    );
     try {
       System.out.write(httpResponse.getBytes(StandardCharsets.UTF_8));
       System.out.flush();
@@ -78,8 +119,11 @@ public class ResponseSender {
   }
 
   private void sendServerError(String message) {
-    String json = String.format("{\"error\":\"%s\"}", new Object[] { message });
-    String httpResponse = "Status: 500 Internal Server Error\nContent-Type: application/json\nContent-Length: %d\n\n%s\n".formatted(new Object[] { Integer.valueOf((json.getBytes(StandardCharsets.UTF_8)).length), json });
+    String json = String.format("{\"error\":\"%s\"}", escapeJson(message));
+    String httpResponse = String.format(
+        "Status: 500 Internal Server Error\nContent-Type: application/json\nAccess-Control-Allow-Origin: *\nContent-Length: %d\n\n%s\n",
+        json.getBytes(StandardCharsets.UTF_8).length, json
+    );
     try {
       System.out.write(httpResponse.getBytes(StandardCharsets.UTF_8));
       System.out.flush();
@@ -90,18 +134,29 @@ public class ResponseSender {
 
   private String toJson(Map<String, Object> map) {
     StringBuilder sb = new StringBuilder("{");
+    boolean first = true;
     for (Map.Entry<String, Object> entry : map.entrySet()) {
-      sb.append("\"").append(entry.getKey()).append("\":");
+      if (!first) sb.append(",");
+      first = false;
+
+      sb.append("\"").append(escapeJson(entry.getKey())).append("\":");
       Object val = entry.getValue();
       if (val instanceof String) {
-        sb.append("\"").append(val).append("\"");
+        sb.append("\"").append(escapeJson((String)val)).append("\"");
       } else {
         sb.append(val);
       }
-      sb.append(",");
     }
-    sb.deleteCharAt(sb.length() - 1);
     sb.append("}");
     return sb.toString();
+  }
+
+  private String escapeJson(String str) {
+    if (str == null) return "";
+    return str.replace("\\", "\\\\")
+        .replace("\"", "\\\"")
+        .replace("\n", "\\n")
+        .replace("\r", "\\r")
+        .replace("\t", "\\t");
   }
 }

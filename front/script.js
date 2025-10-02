@@ -21,6 +21,7 @@ document.addEventListener('DOMContentLoaded', function() {
         initializeModal();
         initializeTable();
         loadStoredResults();
+        initializeConfirmModal(); // Новая функция для модалки подтверждения
 
         console.log('Инициализация завершена успешно');
     } catch (error) {
@@ -52,14 +53,57 @@ function initializeForm() {
         });
     });
 
-    // Y поле
+    // Y поле - улучшенная обработка (пункт 7)
     const yInput = document.getElementById('y-input');
     if (yInput) {
+        // Предотвращаем вставку недопустимых символов
+        yInput.addEventListener('keypress', function(e) {
+            const char = String.fromCharCode(e.which);
+            const value = this.value;
+
+            // Разрешаем: цифры, точку, запятую, минус (только в начале)
+            if (!/[\d.,\-]/.test(char)) {
+                e.preventDefault();
+                return;
+            }
+
+            // Минус только в начале
+            if (char === '-' && value.length > 0) {
+                e.preventDefault();
+                return;
+            }
+
+            // Только одна точка или запятая
+            if ((char === '.' || char === ',') && (value.includes('.') || value.includes(','))) {
+                e.preventDefault();
+                return;
+            }
+        });
+
         yInput.addEventListener('input', function() {
-            const value = this.value.trim().replace(',', '.');
-            selectedY = value ? parseFloat(value) : null;
+            let value = this.value.trim();
+
+            // Заменяем запятую на точку
+            value = value.replace(',', '.');
+
+            // Не обрезаем знаки после запятой (пункт 5)
+            selectedY = value ? value : null;
             console.log('Введен Y:', selectedY);
             validateY();
+        });
+
+        // Предотвращаем изменение через инспектор (пункт 7)
+        yInput.addEventListener('paste', function(e) {
+            e.preventDefault();
+            const pastedText = (e.clipboardData || window.clipboardData).getData('text');
+            const cleanedText = pastedText.replace(',', '.').trim();
+
+            // Проверяем, что вставляемый текст - это число
+            if (/^-?\d*\.?\d*$/.test(cleanedText)) {
+                this.value = cleanedText;
+                selectedY = cleanedText;
+                validateY();
+            }
         });
     }
 
@@ -95,13 +139,13 @@ function initializeForm() {
         });
     }
 
-    // Кнопка очистки
+    // Кнопка очистки с красивым модальным окном (пункт 3)
     const clearButton = document.getElementById('clear-results');
     if (clearButton) {
         clearButton.addEventListener('click', function() {
-            if (confirm('Очистить все результаты?')) {
+            showConfirmModal('Очистить все результаты?', 'Это действие нельзя отменить', function() {
                 clearResults();
-            }
+            });
         });
     }
 }
@@ -114,7 +158,7 @@ function updateCurrentRDisplay() {
     }
 }
 
-// Валидация X
+// УЛУЧШЕННАЯ ВАЛИДАЦИЯ (пункт 1 и 7)
 function validateX() {
     const errorElement = document.getElementById('x-error');
     if (!errorElement) return true;
@@ -134,17 +178,24 @@ function validateX() {
     return true;
 }
 
-// Валидация Y
 function validateY() {
     const errorElement = document.getElementById('y-error');
     if (!errorElement) return true;
 
-    if (selectedY === null || isNaN(selectedY)) {
+    if (selectedY === null || selectedY === '') {
         showError(errorElement, 'Введите значение Y');
         return false;
     }
 
-    if (selectedY <= -3 || selectedY >= 5) {
+    // Преобразуем в число для проверки диапазона
+    const numY = parseFloat(selectedY);
+
+    if (isNaN(numY)) {
+        showError(errorElement, 'Y должен быть числом');
+        return false;
+    }
+
+    if (numY <= -3 || numY >= 5) {
         showError(errorElement, 'Y должен быть в интервале (-3; 5)');
         return false;
     }
@@ -153,7 +204,6 @@ function validateY() {
     return true;
 }
 
-// Валидация R
 function validateR() {
     const errorElement = document.getElementById('r-error');
     if (!errorElement) return true;
@@ -204,15 +254,19 @@ function handleFormSubmit() {
     sendDataToServer(selectedX, selectedY, selectedR);
 }
 
-// Отправка данных на FastCGI сервер
-function sendDataToServer(x, y, r) {
+// Отправка данных на FastCGI сервер (без показа загрузки для точек с canvas - пункт 2)
+function sendDataToServer(x, y, r, fromCanvas = false) {
     console.log('Отправка на сервер:', { x, y, r });
 
-    showLoading(true);
+    // Показываем загрузку только если это не с canvas (пункт 2)
+    if (!fromCanvas) {
+        showLoading(true);
+    }
 
+    // Отправляем Y как строку для сохранения всех знаков (пункт 5)
     const data = {
         x: x,
-        y: y,
+        y: String(y), // Отправляем как строку
         r: r
     };
 
@@ -239,7 +293,9 @@ function sendDataToServer(x, y, r) {
             handleServerError(error);
         })
         .finally(() => {
-            showLoading(false);
+            if (!fromCanvas) {
+                showLoading(false);
+            }
         });
 }
 
@@ -256,6 +312,7 @@ function handleServerResponse(data) {
     saveResultToStorage(data);
 
     if (window.addPointToCanvas) {
+        // Используем исходные значения из ответа
         window.addPointToCanvas(parseFloat(data.x), parseFloat(data.y), data.hit, parseFloat(data.r));
     }
 
@@ -273,6 +330,8 @@ function handleServerError(error) {
         errorMessage = 'Внутренняя ошибка сервера';
     } else if (error.message.includes('400')) {
         errorMessage = 'Некорректные данные';
+    } else if (error.message.includes('405')) {
+        errorMessage = 'Недопустимый метод запроса';
     }
 
     showModal(errorMessage);
@@ -289,6 +348,7 @@ function addResultToTable(data) {
     const resultText = data.hit ? 'Попадание' : 'Промах';
     const resultClass = data.hit ? 'result-hit' : 'result-miss';
 
+    // Отображаем Y как есть, без округления
     row.innerHTML = `
         <td>${data.x}</td>
         <td>${data.y}</td>
@@ -386,7 +446,7 @@ function loadStoredResults() {
     }
 }
 
-// Функция для добавления точки с canvas
+// Функция для добавления точки с canvas (без загрузки - пункт 2)
 function addPointFromCanvas(x, y) {
     console.log('Добавление точки с canvas:', { x, y });
 
@@ -405,7 +465,8 @@ function addPointFromCanvas(x, y) {
         return;
     }
 
-    sendDataToServer(x, y, selectedR);
+    // Отправляем БЕЗ показа загрузки (пункт 2)
+    sendDataToServer(x, y, selectedR, true);
 }
 
 // Инициализация модального окна
@@ -450,6 +511,76 @@ function hideModal() {
     }
 }
 
+// НОВОЕ: Инициализация модального окна подтверждения (пункт 3)
+function initializeConfirmModal() {
+    // Создаем модальное окно подтверждения, если его еще нет
+    if (!document.getElementById('confirm-modal')) {
+        const confirmModalHTML = `
+            <div id="confirm-modal" class="modal">
+                <div class="modal-backdrop"></div>
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3 class="modal-title" id="confirm-title">Подтверждение</h3>
+                        <button class="close-btn" type="button">×</button>
+                    </div>
+                    <div class="modal-body">
+                        <p id="confirm-text"></p>
+                        <div class="modal-actions">
+                            <button id="confirm-yes" class="modal-btn modal-btn-primary">Да</button>
+                            <button id="confirm-no" class="modal-btn modal-btn-secondary">Отмена</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', confirmModalHTML);
+    }
+
+    const modal = document.getElementById('confirm-modal');
+    const closeBtn = modal.querySelector('.close-btn');
+    const backdrop = modal.querySelector('.modal-backdrop');
+    const noBtn = document.getElementById('confirm-no');
+
+    // Обработчики для закрытия
+    [closeBtn, backdrop, noBtn].forEach(element => {
+        if (element) {
+            element.addEventListener('click', hideConfirmModal);
+        }
+    });
+}
+
+// Показать модальное окно подтверждения (пункт 3)
+function showConfirmModal(title, message, onConfirm) {
+    const modal = document.getElementById('confirm-modal');
+    const titleEl = document.getElementById('confirm-title');
+    const textEl = document.getElementById('confirm-text');
+    const yesBtn = document.getElementById('confirm-yes');
+
+    if (modal && titleEl && textEl && yesBtn) {
+        titleEl.textContent = title;
+        textEl.textContent = message;
+
+        // Удаляем старый обработчик и добавляем новый
+        const newYesBtn = yesBtn.cloneNode(true);
+        yesBtn.parentNode.replaceChild(newYesBtn, yesBtn);
+
+        newYesBtn.addEventListener('click', function() {
+            hideConfirmModal();
+            if (onConfirm) onConfirm();
+        });
+
+        modal.style.display = 'flex';
+    }
+}
+
+// Скрыть модальное окно подтверждения
+function hideConfirmModal() {
+    const modal = document.getElementById('confirm-modal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+
 // Показать/скрыть загрузку
 function showLoading(show) {
     const loading = document.getElementById('loading');
@@ -478,3 +609,25 @@ function hideEmptyState() {
         emptyState.style.display = 'none';
     }
 }
+
+// Защита от изменения через консоль (пункт 7)
+(function() {
+    // Защищаем критические переменные
+    Object.defineProperty(window, 'selectedX', {
+        get: function() { return selectedX; },
+        set: function() { console.warn('Попытка изменить защищенную переменную'); },
+        configurable: false
+    });
+
+    Object.defineProperty(window, 'selectedY', {
+        get: function() { return selectedY; },
+        set: function() { console.warn('Попытка изменить защищенную переменную'); },
+        configurable: false
+    });
+
+    Object.defineProperty(window, 'selectedR', {
+        get: function() { return selectedR; },
+        set: function() { console.warn('Попытка изменить защищенную переменную'); },
+        configurable: false
+    });
+})();

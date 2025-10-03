@@ -22,8 +22,8 @@ public class JsonParser implements RequestParser {
       if (!yStr.matches("^-?\\d*\\.?\\d+$")) {
         throw new IllegalArgumentException("Y must be a valid decimal number");
       }
-      if (yStr.length() > 30) {
-        throw new IllegalArgumentException("Y value is too long (max 30 characters)");
+      if (yStr.length() > 100) {
+        throw new IllegalArgumentException("Y value is too long (max 100 characters)");
       }
 
       BigDecimal x = new BigDecimal(xStr, MC);

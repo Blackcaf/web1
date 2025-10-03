@@ -69,8 +69,8 @@ function initializeForm() {
 
         yInput.addEventListener('input', function() {
             let value = this.value.trim().replace(',', '.');
-            if (value.length > 30) {
-                value = value.substring(0, 30);
+            if (value.length > 100) {
+                value = value.substring(0, 100);
                 this.value = value;
             }
             selectedY = value ? value : null;

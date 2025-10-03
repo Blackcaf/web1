@@ -433,8 +433,8 @@ function handleCanvasClick(event) {
     let preciseY = mathY.toString();
 
     // Ограничиваем длину строк
-    if (preciseX.length > 30) preciseX = preciseX.substring(0, 30);
-    if (preciseY.length > 30) preciseY = preciseY.substring(0, 30);
+    if (preciseX.length > 100) preciseX = preciseX.substring(0, 100);
+    if (preciseY.length > 100) preciseY = preciseY.substring(0, 100);
 
     console.log('handleCanvasClick: mathX =', mathX, ', mathY =', mathY);
     console.log('handleCanvasClick: preciseX =', preciseX, ', preciseY =', preciseY);

@@ -77,10 +77,10 @@ function drawPurpleBackground() {
         canvasSize * 0.7, canvasSize * 0.7, canvasSize * 0.9
     );
 
-    purpleGradient.addColorStop(0, 'rgba(147,112,219,0.1)'); // Светло-фиолетовый
-    purpleGradient.addColorStop(0.4, 'rgba(138,43,226,0.1)'); // Фиолетовый
-    purpleGradient.addColorStop(0.7, 'rgba(123,104,238,0.1)'); // Средне-фиолетовый
-    purpleGradient.addColorStop(1, 'rgba(106,90,205,0.1)'); // Сине-фиолетовый
+    purpleGradient.addColorStop(0, 'rgba(147,112,219,0.1)');
+    purpleGradient.addColorStop(0.4, 'rgba(138,43,226,0.1)');
+    purpleGradient.addColorStop(0.7, 'rgba(123,104,238,0.1)');
+    purpleGradient.addColorStop(1, 'rgba(106,90,205,0.1)');
 
     ctx.fillStyle = purpleGradient;
     ctx.fillRect(0, 0, canvasSize, canvasSize);
@@ -93,9 +93,9 @@ function drawPurpleBackground() {
         const y = canvasSize * 0.4 + Math.cos(i * 0.8) * 70;
 
         const waveGradient = ctx.createRadialGradient(x, y, 0, x + 40, y + 25, 90);
-        waveGradient.addColorStop(0, 'rgba(186,85,211,0.1)'); // Medium orchid
-        waveGradient.addColorStop(0.5, 'rgba(147,112,219,0.1)'); // Medium purple
-        waveGradient.addColorStop(1, 'rgba(138,43,226,0.1)'); // Blue violet
+        waveGradient.addColorStop(0, 'rgba(186,85,211,0.1)');
+        waveGradient.addColorStop(0.5, 'rgba(147,112,219,0.1)');
+        waveGradient.addColorStop(1, 'rgba(138,43,226,0.1)');
 
         ctx.fillStyle = waveGradient;
         ctx.beginPath();
@@ -112,9 +112,9 @@ function drawPurpleBackground() {
         const dropGradient = ctx.createRadialGradient(
             x - radius * 0.3, y - radius * 0.3, 0, x, y, radius
         );
-        dropGradient.addColorStop(0, 'rgba(221,160,221,0.2)'); // Plum
-        dropGradient.addColorStop(0.5, 'rgba(186,85,211,0.1)'); // Medium orchid
-        dropGradient.addColorStop(1, 'rgba(147, 112, 219, 0.1)'); // Medium purple
+        dropGradient.addColorStop(0, 'rgba(221,160,221,0.2)');
+        dropGradient.addColorStop(0.5, 'rgba(186,85,211,0.1)');
+        dropGradient.addColorStop(1, 'rgba(147, 112, 219, 0.1)');
 
         ctx.fillStyle = dropGradient;
         ctx.beginPath();
@@ -134,7 +134,7 @@ function drawBeautifulFrame() {
 
     ctx.save();
 
-    ctx.shadowColor = 'rgba(75,0,130,0.1)'; // Indigo shadow
+    ctx.shadowColor = 'rgba(75,0,130,0.1)';
     ctx.shadowBlur = 25;
     ctx.shadowOffsetX = 0;
     ctx.shadowOffsetY = 8;
@@ -149,21 +149,20 @@ function drawBeautifulFrame() {
     );
 
     const outerGradient = ctx.createLinearGradient(0, outerPadding, 0, canvasSize - outerPadding);
-    outerGradient.addColorStop(0, 'rgba(186, 85, 211, 0.25)'); // Medium orchid
-    outerGradient.addColorStop(0.5, 'rgba(147, 112, 219, 0.2)'); // Medium purple
-    outerGradient.addColorStop(1, 'rgba(138, 43, 226, 0.15)'); // Blue violet
+    outerGradient.addColorStop(0, 'rgba(186, 85, 211, 0.25)');
+    outerGradient.addColorStop(0.5, 'rgba(147, 112, 219, 0.2)');
+    outerGradient.addColorStop(1, 'rgba(138, 43, 226, 0.15)');
 
     ctx.fillStyle = outerGradient;
     ctx.fill();
 
-    // Убираем тень
     ctx.shadowColor = 'transparent';
     ctx.shadowBlur = 0;
 
     const borderGradient = ctx.createLinearGradient(0, outerPadding, 0, canvasSize - outerPadding);
-    borderGradient.addColorStop(0, 'rgba(221, 160, 221, 0.6)'); // Plum
-    borderGradient.addColorStop(0.5, 'rgba(186, 85, 211, 0.4)'); // Medium orchid
-    borderGradient.addColorStop(1, 'rgba(147, 112, 219, 0.5)'); // Medium purple
+    borderGradient.addColorStop(0, 'rgba(221, 160, 221, 0.6)');
+    borderGradient.addColorStop(0.5, 'rgba(186, 85, 211, 0.4)');
+    borderGradient.addColorStop(1, 'rgba(147, 112, 219, 0.5)');
 
     ctx.strokeStyle = borderGradient;
     ctx.lineWidth = 2;
@@ -179,17 +178,17 @@ function drawBeautifulFrame() {
     );
 
     const innerGradient = ctx.createLinearGradient(0, innerPadding, 0, canvasSize - innerPadding);
-    innerGradient.addColorStop(0, 'rgba(147, 112, 219, 0.08)'); // Medium purple
-    innerGradient.addColorStop(0.5, 'rgba(138, 43, 226, 0.06)'); // Blue violet
-    innerGradient.addColorStop(1, 'rgba(123, 104, 238, 0.04)'); // Medium slate blue
+    innerGradient.addColorStop(0, 'rgba(147, 112, 219, 0.08)');
+    innerGradient.addColorStop(0.5, 'rgba(138, 43, 226, 0.06)');
+    innerGradient.addColorStop(1, 'rgba(123, 104, 238, 0.04)');
 
     ctx.fillStyle = innerGradient;
     ctx.fill();
 
     const innerBorderGradient = ctx.createLinearGradient(0, innerPadding, 0, canvasSize - innerPadding);
-    innerBorderGradient.addColorStop(0, 'rgba(221, 160, 221, 0.4)'); // Plum
-    innerBorderGradient.addColorStop(0.5, 'rgba(186, 85, 211, 0.2)'); // Medium orchid
-    innerBorderGradient.addColorStop(1, 'rgba(147, 112, 219, 0.3)'); // Medium purple
+    innerBorderGradient.addColorStop(0, 'rgba(221, 160, 221, 0.4)');
+    innerBorderGradient.addColorStop(0.5, 'rgba(186, 85, 211, 0.2)');
+    innerBorderGradient.addColorStop(1, 'rgba(147, 112, 219, 0.3)');
 
     ctx.strokeStyle = innerBorderGradient;
     ctx.lineWidth = 1;
@@ -229,14 +228,14 @@ function drawSinglePoint(x, y, hit) {
 
     if (hit) {
         gradient.addColorStop(0, 'rgba(255, 255, 255, 0.9)');
-        gradient.addColorStop(0.3, 'rgba(50, 205, 50, 0.9)'); // Lime green
-        gradient.addColorStop(0.7, 'rgba(34, 139, 34, 0.95)'); // Forest green
-        gradient.addColorStop(1, 'rgba(0, 100, 0, 0.8)'); // Dark green
+        gradient.addColorStop(0.3, 'rgba(50, 205, 50, 0.9)');
+        gradient.addColorStop(0.7, 'rgba(34, 139, 34, 0.95)');
+        gradient.addColorStop(1, 'rgba(0, 100, 0, 0.8)');
     } else {
         gradient.addColorStop(0, 'rgba(255, 255, 255, 0.9)');
-        gradient.addColorStop(0.3, 'rgba(255, 69, 0, 0.9)'); // Red orange
-        gradient.addColorStop(0.7, 'rgba(220, 20, 60, 0.95)'); // Crimson
-        gradient.addColorStop(1, 'rgba(139, 0, 0, 0.8)'); // Dark red
+        gradient.addColorStop(0.3, 'rgba(255, 69, 0, 0.9)');
+        gradient.addColorStop(0.7, 'rgba(220, 20, 60, 0.95)');
+        gradient.addColorStop(1, 'rgba(139, 0, 0, 0.8)');
     }
 
     ctx.fillStyle = gradient;
@@ -265,9 +264,9 @@ function drawAxes() {
     ctx.save();
 
     const axisGradient = ctx.createLinearGradient(0, 0, canvasSize, canvasSize);
-    axisGradient.addColorStop(0, 'rgba(75, 0, 130, 0.7)'); // Indigo
-    axisGradient.addColorStop(0.5, 'rgba(106, 90, 205, 0.8)'); // Slate blue
-    axisGradient.addColorStop(1, 'rgba(72, 61, 139, 0.7)'); // Dark slate blue
+    axisGradient.addColorStop(0, 'rgba(75, 0, 130, 0.7)');
+    axisGradient.addColorStop(0.5, 'rgba(106, 90, 205, 0.8)');
+    axisGradient.addColorStop(1, 'rgba(72, 61, 139, 0.7)');
 
     ctx.strokeStyle = axisGradient;
     ctx.lineWidth = 2;
@@ -282,7 +281,7 @@ function drawAxes() {
     ctx.lineTo(center, canvasSize - 60);
     ctx.stroke();
 
-    ctx.fillStyle = 'rgba(75, 0, 130, 0.8)'; // Indigo
+    ctx.fillStyle = 'rgba(75, 0, 130, 0.8)';
 
     const arrowSize = 10;
 
@@ -329,7 +328,7 @@ function drawAreas(r) {
         ctx.closePath();
         ctx.fill();
 
-        ctx.fillStyle = 'rgba(40, 167, 69, 0.8)'; // Bright green
+        ctx.fillStyle = 'rgba(40, 167, 69, 0.8)';
         ctx.beginPath();
         ctx.moveTo(center, center);
         ctx.lineTo(center + halfRPixels, center);
@@ -372,7 +371,7 @@ function drawCleanScale() {
     const scale = getCurrentScale();
 
     ctx.save();
-    ctx.fillStyle = 'rgba(75, 0, 130, 0.8)'; // Indigo
+    ctx.fillStyle = 'rgba(75, 0, 130, 0.8)';
     ctx.font = '13px -apple-system, BlinkMacSystemFont, sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
@@ -387,7 +386,7 @@ function drawCleanScale() {
             const label = factor === 1 ? 'R' : factor === -1 ? '-R' : `${factor}R`;
             ctx.fillText(label, x, center + 30);
 
-            ctx.strokeStyle = 'rgba(106, 90, 205, 0.6)'; // Slate blue
+            ctx.strokeStyle = 'rgba(106, 90, 205, 0.6)';
             ctx.lineWidth = 2;
             ctx.beginPath();
             ctx.moveTo(x, center - 8);
@@ -400,7 +399,7 @@ function drawCleanScale() {
             const label = factor === 1 ? 'R' : factor === -1 ? '-R' : `${factor}R`;
             ctx.fillText(label, center - 40, y);
 
-            ctx.strokeStyle = 'rgba(106, 90, 205, 0.6)'; // Slate blue
+            ctx.strokeStyle = 'rgba(106, 90, 205, 0.6)';
             ctx.lineWidth = 2;
             ctx.beginPath();
             ctx.moveTo(center - 8, y);
@@ -410,7 +409,7 @@ function drawCleanScale() {
     });
 
     ctx.font = 'bold 16px -apple-system, BlinkMacSystemFont, sans-serif';
-    ctx.fillStyle = 'rgba(72, 61, 139, 0.9)'; // Dark slate blue
+    ctx.fillStyle = 'rgba(72, 61, 139, 0.9)';
     ctx.fillText('X', canvasSize - 50, center - 20);
     ctx.fillText('Y', center + 20, 50);
     ctx.fillText('0', center - 25, center + 25);
@@ -432,7 +431,6 @@ function handleCanvasClick(event) {
     let preciseX = mathX.toString();
     let preciseY = mathY.toString();
 
-    // Ограничиваем длину строк
     if (preciseX.length > 100) preciseX = preciseX.substring(0, 100);
     if (preciseY.length > 100) preciseY = preciseY.substring(0, 100);
 

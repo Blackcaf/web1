@@ -299,7 +299,6 @@ function handleServerError(error) {
     showModal(errorMessage);
 }
 
-// Функция для усечения длинных чисел
 function truncateNumber(value, maxLength = 20) {
     const str = String(value);
     if (str.length <= maxLength) {
@@ -308,7 +307,6 @@ function truncateNumber(value, maxLength = 20) {
     return str.substring(0, maxLength) + '...';
 }
 
-// Функция для создания ячейки с всплывающей подсказкой
 function createCellWithTooltip(value) {
     const truncated = truncateNumber(value);
     const fullValue = String(value);
@@ -341,13 +339,11 @@ function addResultToTable(data) {
 
     tableBody.insertBefore(row, tableBody.firstChild);
 
-    // Добавляем обработчики событий для всплывающих подсказок
     initializeTooltips(row);
 
     hideEmptyState();
 }
 
-// Инициализация всплывающих подсказок
 function initializeTooltips(container = document) {
     const truncatedElements = container.querySelectorAll('.truncated-value');
 
@@ -357,15 +353,12 @@ function initializeTooltips(container = document) {
     });
 }
 
-// Показать всплывающую подсказку
 function showTooltip(event) {
     const element = event.currentTarget;
     const fullValue = element.getAttribute('data-full-value');
 
-    // Удаляем существующую подсказку
     hideTooltip();
 
-    // Создаем красивую подсказку с кнопкой закрытия
     const tooltip = document.createElement('div');
     tooltip.className = 'value-tooltip';
     tooltip.id = 'active-tooltip';
@@ -381,28 +374,24 @@ function showTooltip(event) {
 
     document.body.appendChild(tooltip);
 
-    // Добавляем обработчик клика на кнопку закрытия
     const closeBtn = tooltip.querySelector('.tooltip-close');
     closeBtn.addEventListener('click', (e) => {
         e.stopPropagation();
         hideTooltip();
     });
 
-    // Позиционируем подсказку
     const rect = element.getBoundingClientRect();
     const tooltipRect = tooltip.getBoundingClientRect();
 
     let left = rect.left + (rect.width / 2) - (tooltipRect.width / 2);
     let top = rect.top - tooltipRect.height - 12;
 
-    // Проверяем границы экрана
     const padding = 10;
     if (left < padding) left = padding;
     if (left + tooltipRect.width > window.innerWidth - padding) {
         left = window.innerWidth - tooltipRect.width - padding;
     }
 
-    // Если не помещается сверху, показываем снизу
     if (top < padding) {
         top = rect.bottom + 12;
         tooltip.classList.add('below');
@@ -411,16 +400,13 @@ function showTooltip(event) {
     tooltip.style.left = left + 'px';
     tooltip.style.top = top + window.scrollY + 'px';
 
-    // Плавное появление
     requestAnimationFrame(() => {
         tooltip.classList.add('visible');
     });
 }
 
-// Делаем hideTooltip доступной глобально
 window.hideTooltip = hideTooltip;
 
-// Скрыть всплывающую подсказку
 function hideTooltip() {
     const existingTooltip = document.getElementById('active-tooltip');
     if (existingTooltip) {

@@ -520,7 +520,6 @@ section {
     font-weight: 700;
 }
 
-/* Увеличенная ширина столбцов X и Y */
 .results-table th:nth-child(1),
 .results-table td:nth-child(1) { width: 20%; }
 
@@ -765,8 +764,6 @@ section {
     margin: 0;
 }
 
-/* ==================== КРАСИВАЯ ВСПЛЫВАЮЩАЯ ПОДСКАЗКА ==================== */
-
 .truncated-value {
     cursor: help;
     position: relative;
@@ -900,7 +897,6 @@ section {
     font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
 }
 
-/* Медиа-запросы */
 @media (max-width: 1400px) {
     .main-container {
         grid-template-columns: 1fr;

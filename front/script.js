@@ -292,6 +292,8 @@ function handleServerError(error) {
         errorMessage = 'Внутренняя ошибка сервера';
     } else if (error.message.includes('400')) {
         errorMessage = 'Некорректные данные';
+    } else if (error.message.includes('404')) {
+        errorMessage = 'Endpoint не найден. Проверьте URL запроса';
     } else if (error.message.includes('405')) {
         errorMessage = 'Недопустимый метод запроса';
     }

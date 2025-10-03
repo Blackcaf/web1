@@ -35,6 +35,12 @@ public class ResponseSender {
     try {
       long startTime = System.nanoTime();
 
+      String requestUri = FCGIInterface.request.params.getProperty("REQUEST_URI");
+      if (requestUri == null || !requestUri.equals("/calculate")) {
+        sendNotFound("Endpoint not found. Use /calculate");
+        return;
+      }
+
       String method = FCGIInterface.request.params.getProperty("REQUEST_METHOD");
       if (method == null || !"POST".equalsIgnoreCase(method)) {
         sendMethodNotAllowed("Only POST method is allowed. Received: " + method);
@@ -107,6 +113,19 @@ public class ResponseSender {
     String json = String.format("{\"error\":\"%s\"}", escapeJson(message));
     String httpResponse = String.format(
         "Status: 400 Bad Request\nContent-Type: application/json\nAccess-Control-Allow-Origin: *\nContent-Length: %d\n\n%s\n",
+        json.getBytes(StandardCharsets.UTF_8).length, json
+    );
+    try {
+      outputHandler.send(httpResponse);
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+  }
+
+  private void sendNotFound(String message) {
+    String json = String.format("{\"error\":\"%s\"}", escapeJson(message));
+    String httpResponse = String.format(
+        "Status: 404 Not Found\nContent-Type: application/json\nAccess-Control-Allow-Origin: *\nContent-Length: %d\n\n%s\n",
         json.getBytes(StandardCharsets.UTF_8).length, json
     );
     try {

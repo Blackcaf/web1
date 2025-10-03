@@ -28,7 +28,6 @@ public class Validator implements PointValidator {
 
   @Override
   public boolean isHit(BigDecimal x, BigDecimal y, BigDecimal r) {
-    // Пустая реализация, так как валидатор не отвечает за проверку попадания
     throw new UnsupportedOperationException("Hit checking not supported by Validator");
   }
 }

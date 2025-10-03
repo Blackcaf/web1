@@ -85,7 +85,6 @@ function initializeForm() {
 
             if (/^-?\d*\.?\d*$/.test(cleanedText)) {
                 this.value = cleanedText;
-                // ИСПРАВЛЕНО: Сохраняем как строку
                 selectedY = cleanedText;
                 validateY();
             }
@@ -166,13 +165,12 @@ function validateY() {
         return false;
     }
 
-    // Проверяем только формат числа
     if (!/^-?\d+\.?\d*$/.test(selectedY)) {
         showError(errorElement, 'Y должен быть числом');
         return false;
     }
 
-    console.log('validateY: selectedY =', selectedY); // Логируем для отладки
+    console.log('validateY: selectedY =', selectedY);
     hideError(errorElement);
     return true;
 }
@@ -230,10 +228,9 @@ function sendDataToServer(x, y, r, fromCanvas = false) {
         showLoading(true);
     }
 
-    // КРИТИЧЕСКИ ВАЖНО: Y отправляем как СТРОКУ!!!
     const data = {
         x: x,
-        y: String(y), // Явно преобразуем в строку
+        y: String(y),
         r: r
     };
 
@@ -302,6 +299,27 @@ function handleServerError(error) {
     showModal(errorMessage);
 }
 
+// Функция для усечения длинных чисел
+function truncateNumber(value, maxLength = 20) {
+    const str = String(value);
+    if (str.length <= maxLength) {
+        return str;
+    }
+    return str.substring(0, maxLength) + '...';
+}
+
+// Функция для создания ячейки с всплывающей подсказкой
+function createCellWithTooltip(value) {
+    const truncated = truncateNumber(value);
+    const fullValue = String(value);
+
+    if (truncated === fullValue) {
+        return truncated;
+    }
+
+    return `<span class="truncated-value" data-full-value="${fullValue}">${truncated}</span>`;
+}
+
 function addResultToTable(data) {
     const tableBody = document.getElementById('results-body');
     if (!tableBody) return;
@@ -313,16 +331,102 @@ function addResultToTable(data) {
     const resultClass = data.hit ? 'result-hit' : 'result-miss';
 
     row.innerHTML = `
-        <td>${data.x}</td>
-        <td>${data.y}</td>
-        <td>${data.r}</td>
+        <td>${createCellWithTooltip(data.x)}</td>
+        <td>${createCellWithTooltip(data.y)}</td>
+        <td>${createCellWithTooltip(data.r)}</td>
         <td class="${resultClass}">${resultText}</td>
         <td>${formatTime(data.currentTime)}</td>
         <td>${data.scriptTimeMs} мс</td>
     `;
 
     tableBody.insertBefore(row, tableBody.firstChild);
+
+    // Добавляем обработчики событий для всплывающих подсказок
+    initializeTooltips(row);
+
     hideEmptyState();
+}
+
+// Инициализация всплывающих подсказок
+function initializeTooltips(container = document) {
+    const truncatedElements = container.querySelectorAll('.truncated-value');
+
+    truncatedElements.forEach(element => {
+        element.addEventListener('mouseenter', showTooltip);
+        element.addEventListener('mouseleave', hideTooltip);
+    });
+}
+
+// Показать всплывающую подсказку
+function showTooltip(event) {
+    const element = event.currentTarget;
+    const fullValue = element.getAttribute('data-full-value');
+
+    // Удаляем существующую подсказку
+    hideTooltip();
+
+    // Создаем красивую подсказку с кнопкой закрытия
+    const tooltip = document.createElement('div');
+    tooltip.className = 'value-tooltip';
+    tooltip.id = 'active-tooltip';
+
+    tooltip.innerHTML = `
+        <div class="tooltip-header">
+            <span class="tooltip-label">ПОЛНОЕ ЗНАЧЕНИЕ</span>
+            <button class="tooltip-close" onclick="window.hideTooltip()">×</button>
+        </div>
+        <span class="tooltip-number">${fullValue}</span>
+        <div class="tooltip-arrow"></div>
+    `;
+
+    document.body.appendChild(tooltip);
+
+    // Добавляем обработчик клика на кнопку закрытия
+    const closeBtn = tooltip.querySelector('.tooltip-close');
+    closeBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        hideTooltip();
+    });
+
+    // Позиционируем подсказку
+    const rect = element.getBoundingClientRect();
+    const tooltipRect = tooltip.getBoundingClientRect();
+
+    let left = rect.left + (rect.width / 2) - (tooltipRect.width / 2);
+    let top = rect.top - tooltipRect.height - 12;
+
+    // Проверяем границы экрана
+    const padding = 10;
+    if (left < padding) left = padding;
+    if (left + tooltipRect.width > window.innerWidth - padding) {
+        left = window.innerWidth - tooltipRect.width - padding;
+    }
+
+    // Если не помещается сверху, показываем снизу
+    if (top < padding) {
+        top = rect.bottom + 12;
+        tooltip.classList.add('below');
+    }
+
+    tooltip.style.left = left + 'px';
+    tooltip.style.top = top + window.scrollY + 'px';
+
+    // Плавное появление
+    requestAnimationFrame(() => {
+        tooltip.classList.add('visible');
+    });
+}
+
+// Делаем hideTooltip доступной глобально
+window.hideTooltip = hideTooltip;
+
+// Скрыть всплывающую подсказку
+function hideTooltip() {
+    const existingTooltip = document.getElementById('active-tooltip');
+    if (existingTooltip) {
+        existingTooltip.classList.remove('visible');
+        setTimeout(() => existingTooltip.remove(), 200);
+    }
 }
 
 function formatTime(timeString) {
@@ -411,13 +515,11 @@ function addPointFromCanvas(x, y) {
         return;
     }
 
-    // Проверяем, что x и y — валидные строки, представляющие числа
     if (!/^-?\d+\.?\d*$/.test(x) || !/^-?\d+\.?\d*$/.test(y)) {
         showModal('X и Y должны быть числами');
         return;
     }
 
-    // Оставляем валидацию диапазона серверу
     sendDataToServer(x, y, selectedR, true);
 }
 
@@ -439,6 +541,7 @@ function initializeModal() {
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') {
             hideModal();
+            hideTooltip();
         }
     });
 }

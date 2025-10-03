@@ -429,11 +429,18 @@ function handleCanvasClick(event) {
     const mathX = (x - center) / scale;
     const mathY = -(y - center) / scale;
 
-    const roundedX = Math.round(mathX * 10) / 10;
-    const roundedY = Math.round(mathY * 10) / 10;
+    let preciseX = mathX.toString();
+    let preciseY = mathY.toString();
+
+    // Ограничиваем длину строк
+    if (preciseX.length > 30) preciseX = preciseX.substring(0, 30);
+    if (preciseY.length > 30) preciseY = preciseY.substring(0, 30);
+
+    console.log('handleCanvasClick: mathX =', mathX, ', mathY =', mathY);
+    console.log('handleCanvasClick: preciseX =', preciseX, ', preciseY =', preciseY);
 
     if (window.addPointFromCanvas) {
-        window.addPointFromCanvas(roundedX, roundedY);
+        window.addPointFromCanvas(preciseX, preciseY);
     }
 }
 
@@ -451,7 +458,7 @@ function isPointInArea(x, y, r) {
     if (x >= -r/2 && x <= 0 && y >= 0 && y <= r) return true;
     if (x <= 0 && y <= 0 && (x*x + y*y) <= (r/2)*(r/2)) return true;
     if (x >= 0 && x <= r/2 && y <= 0 && y >= -r) {
-        if (2*x + y + r >= 0) {
+        if (y - 2*x + r >= 0) {
             return true;
         }
     }

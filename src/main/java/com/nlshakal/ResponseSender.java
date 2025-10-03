@@ -12,14 +12,23 @@ import java.util.Map;
 import java.util.TimeZone;
 
 public class ResponseSender {
-  private final Checker checker = new Checker();
-  private final JsonParser parser = new JsonParser();
-
+  private final PointValidator validator;
+  private final PointValidator hitChecker;
+  private final RequestParser parser;
+  private final OutputHandler outputHandler;
   private final SimpleDateFormat dateFormatter;
 
   public ResponseSender() {
-    dateFormatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
-    dateFormatter.setTimeZone(TimeZone.getTimeZone("UTC"));
+    this(new Validator(), new HitChecker(), new JsonParser(), new FastCGIOutputHandler());
+  }
+
+  public ResponseSender(PointValidator validator, PointValidator hitChecker, RequestParser parser, OutputHandler outputHandler) {
+    this.validator = validator;
+    this.hitChecker = hitChecker;
+    this.parser = parser;
+    this.outputHandler = outputHandler;
+    this.dateFormatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
+    this.dateFormatter.setTimeZone(TimeZone.getTimeZone("UTC"));
   }
 
   public void sendResponse() {
@@ -38,13 +47,13 @@ public class ResponseSender {
       BigDecimal r = data[2];
 
       try {
-        this.checker.validate(x, y, r);
+        validator.validate(x, y, r);
       } catch (IllegalArgumentException e) {
         sendError(e.getMessage());
         return;
       }
 
-      boolean hit = this.checker.isHit(x, y, r);
+      boolean hit = hitChecker.isHit(x, y, r);
       long endTime = System.nanoTime();
       double scriptTimeMs = (endTime - startTime) / 1000000.0D;
 
@@ -53,7 +62,6 @@ public class ResponseSender {
       response.put("y", y.toPlainString());
       response.put("r", r.toPlainString());
       response.put("hit", Boolean.valueOf(hit));
-
       response.put("currentTime", dateFormatter.format(new Date()));
       response.put("scriptTimeMs", String.format("%.2f", Double.valueOf(scriptTimeMs)));
 
@@ -79,7 +87,7 @@ public class ResponseSender {
     buffer.get(raw);
     String request = new String(raw, StandardCharsets.UTF_8);
 
-    return this.parser.getBigDecimals(request);
+    return parser.getBigDecimals(request);
   }
 
   private void sendJson(Map<String, Object> map) {
@@ -89,8 +97,7 @@ public class ResponseSender {
         json.getBytes(StandardCharsets.UTF_8).length, json
     );
     try {
-      System.out.write(httpResponse.getBytes(StandardCharsets.UTF_8));
-      System.out.flush();
+      outputHandler.send(httpResponse);
     } catch (IOException e) {
       e.printStackTrace();
     }
@@ -103,8 +110,7 @@ public class ResponseSender {
         json.getBytes(StandardCharsets.UTF_8).length, json
     );
     try {
-      System.out.write(httpResponse.getBytes(StandardCharsets.UTF_8));
-      System.out.flush();
+      outputHandler.send(httpResponse);
     } catch (IOException e) {
       e.printStackTrace();
     }
@@ -117,8 +123,7 @@ public class ResponseSender {
         json.getBytes(StandardCharsets.UTF_8).length, json
     );
     try {
-      System.out.write(httpResponse.getBytes(StandardCharsets.UTF_8));
-      System.out.flush();
+      outputHandler.send(httpResponse);
     } catch (IOException e) {
       e.printStackTrace();
     }
@@ -131,8 +136,7 @@ public class ResponseSender {
         json.getBytes(StandardCharsets.UTF_8).length, json
     );
     try {
-      System.out.write(httpResponse.getBytes(StandardCharsets.UTF_8));
-      System.out.flush();
+      outputHandler.send(httpResponse);
     } catch (IOException e) {
       e.printStackTrace();
     }

@@ -7,7 +7,8 @@ public class Main {
     System.setProperty("FCGI_PORT", "25501");
     FCGIInterface fcgiInterface = new FCGIInterface();
     ResponseSender sender = new ResponseSender();
-    while (fcgiInterface.FCGIaccept() >= 0)
+    while (fcgiInterface.FCGIaccept() >= 0) {
       sender.sendResponse();
+    }
   }
 }

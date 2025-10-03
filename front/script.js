@@ -68,12 +68,13 @@ function initializeForm() {
         });
 
         yInput.addEventListener('input', function() {
-            let value = this.value.trim();
-
-            value = value.replace(',', '.');
-
+            let value = this.value.trim().replace(',', '.');
+            if (value.length > 30) {
+                value = value.substring(0, 30);
+                this.value = value;
+            }
             selectedY = value ? value : null;
-            console.log('Введен Y:', selectedY);
+            console.log('Введен Y (строка):', selectedY);
             validateY();
         });
 
@@ -84,6 +85,7 @@ function initializeForm() {
 
             if (/^-?\d*\.?\d*$/.test(cleanedText)) {
                 this.value = cleanedText;
+                // ИСПРАВЛЕНО: Сохраняем как строку
                 selectedY = cleanedText;
                 validateY();
             }
@@ -164,18 +166,13 @@ function validateY() {
         return false;
     }
 
-    const numY = parseFloat(selectedY);
-
-    if (isNaN(numY)) {
+    // Проверяем только формат числа
+    if (!/^-?\d+\.?\d*$/.test(selectedY)) {
         showError(errorElement, 'Y должен быть числом');
         return false;
     }
 
-    if (numY <= -3 || numY >= 5) {
-        showError(errorElement, 'Y должен быть в интервале (-3; 5)');
-        return false;
-    }
-
+    console.log('validateY: selectedY =', selectedY); // Логируем для отладки
     hideError(errorElement);
     return true;
 }
@@ -233,11 +230,14 @@ function sendDataToServer(x, y, r, fromCanvas = false) {
         showLoading(true);
     }
 
+    // КРИТИЧЕСКИ ВАЖНО: Y отправляем как СТРОКУ!!!
     const data = {
         x: x,
-        y: String(y),
+        y: String(y), // Явно преобразуем в строку
         r: r
     };
+
+    console.log('JSON для отправки:', JSON.stringify(data));
 
     fetch('/calculate', {
         method: 'POST',
@@ -411,16 +411,13 @@ function addPointFromCanvas(x, y) {
         return;
     }
 
-    if (x < -2 || x > 2) {
-        showModal('X должен быть в диапазоне [-2; 2]');
+    // Проверяем, что x и y — валидные строки, представляющие числа
+    if (!/^-?\d+\.?\d*$/.test(x) || !/^-?\d+\.?\d*$/.test(y)) {
+        showModal('X и Y должны быть числами');
         return;
     }
 
-    if (y <= -3 || y >= 5) {
-        showModal('Y должен быть в диапазоне (-3; 5)');
-        return;
-    }
-
+    // Оставляем валидацию диапазона серверу
     sendDataToServer(x, y, selectedR, true);
 }
 

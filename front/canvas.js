@@ -1,4 +1,3 @@
-// Переменные для canvas
 let canvas;
 let ctx;
 let canvasSize = 600;
@@ -6,14 +5,12 @@ let center = 300;
 let baseScale = 50;
 let points = [];
 
-// Инициализация canvas при загрузке
 document.addEventListener('DOMContentLoaded', function() {
     setTimeout(() => {
         initializeCanvas();
     }, 200);
 });
 
-// Инициализация canvas
 function initializeCanvas() {
     console.log('Инициализация canvas...');
 
@@ -31,19 +28,15 @@ function initializeCanvas() {
 
     console.log('Canvas инициализирован успешно');
 
-    // Обработчик клика по canvas
     canvas.addEventListener('click', handleCanvasClick);
 
-    // Начальная отрисовка
     drawCoordinatePlane();
 }
 
-// Получение текущего масштаба
 function getCurrentScale() {
     return baseScale;
 }
 
-// Основная функция отрисовки
 function drawCoordinatePlane() {
     if (!ctx) {
         console.error('Canvas context not available');
@@ -53,28 +46,21 @@ function drawCoordinatePlane() {
     console.log('Отрисовка координатной плоскости...');
 
     try {
-        // ПОЛНАЯ очистка canvas
         ctx.clearRect(0, 0, canvasSize, canvasSize);
 
-        // Светло-фиолетовый фон с прозрачностью
         drawPurpleBackground();
 
-        // Красивая рамка
         drawBeautifulFrame();
 
-        // Отрисовка осей
         drawAxes();
 
-        // Отрисовка областей если R выбран
         const currentRValue = window.currentR ? window.currentR() : null;
         if (currentRValue && currentRValue > 0) {
             drawAreas(currentRValue);
         }
 
-        // Отрисовка делений
         drawCleanScale();
 
-        // Отрисовка точек
         drawAllPoints();
 
         console.log('Координатная плоскость отрисована успешно');
@@ -83,11 +69,9 @@ function drawCoordinatePlane() {
     }
 }
 
-// Светло-фиолетовый фон с эффектом прозрачности
 function drawPurpleBackground() {
     if (!ctx) return;
 
-    // НИКАКОЙ белой заливки! Сразу фиолетовый градиент
     const purpleGradient = ctx.createRadialGradient(
         canvasSize * 0.3, canvasSize * 0.3, 0,
         canvasSize * 0.7, canvasSize * 0.7, canvasSize * 0.9
@@ -101,10 +85,8 @@ function drawPurpleBackground() {
     ctx.fillStyle = purpleGradient;
     ctx.fillRect(0, 0, canvasSize, canvasSize);
 
-    // Добавляем liquid эффекты в фиолетовых тонах
     ctx.save();
 
-    // Волнообразные искажения
     ctx.globalAlpha = 0.06;
     for (let i = 0; i < 8; i++) {
         const x = (canvasSize / 8) * i + Math.sin(i * 0.7) * 35;
@@ -121,7 +103,6 @@ function drawPurpleBackground() {
         ctx.fill();
     }
 
-    // Фиолетовые liquid капли
     ctx.globalAlpha = 0.04;
     for (let i = 0; i < 12; i++) {
         const x = Math.random() * canvasSize;
@@ -144,7 +125,6 @@ function drawPurpleBackground() {
     ctx.restore();
 }
 
-// Рамка в фиолетовых тонах
 function drawBeautifulFrame() {
     if (!ctx) return;
 
@@ -154,13 +134,11 @@ function drawBeautifulFrame() {
 
     ctx.save();
 
-    // Тень рамки
     ctx.shadowColor = 'rgba(75,0,130,0.1)'; // Indigo shadow
     ctx.shadowBlur = 25;
     ctx.shadowOffsetX = 0;
     ctx.shadowOffsetY = 8;
 
-    // Внешняя рамка
     ctx.beginPath();
     ctx.roundRect(
         outerPadding,
@@ -170,7 +148,6 @@ function drawBeautifulFrame() {
         borderRadius
     );
 
-    // Фиолетовый градиент для внешней рамки
     const outerGradient = ctx.createLinearGradient(0, outerPadding, 0, canvasSize - outerPadding);
     outerGradient.addColorStop(0, 'rgba(186, 85, 211, 0.25)'); // Medium orchid
     outerGradient.addColorStop(0.5, 'rgba(147, 112, 219, 0.2)'); // Medium purple
@@ -183,7 +160,6 @@ function drawBeautifulFrame() {
     ctx.shadowColor = 'transparent';
     ctx.shadowBlur = 0;
 
-    // Фиолетовая граница
     const borderGradient = ctx.createLinearGradient(0, outerPadding, 0, canvasSize - outerPadding);
     borderGradient.addColorStop(0, 'rgba(221, 160, 221, 0.6)'); // Plum
     borderGradient.addColorStop(0.5, 'rgba(186, 85, 211, 0.4)'); // Medium orchid
@@ -193,7 +169,6 @@ function drawBeautifulFrame() {
     ctx.lineWidth = 2;
     ctx.stroke();
 
-    // Внутренняя рабочая область - БЕЗ белого фона!
     ctx.beginPath();
     ctx.roundRect(
         innerPadding,
@@ -203,7 +178,6 @@ function drawBeautifulFrame() {
         borderRadius - 5
     );
 
-    // Очень прозрачный фиолетовый для рабочей области
     const innerGradient = ctx.createLinearGradient(0, innerPadding, 0, canvasSize - innerPadding);
     innerGradient.addColorStop(0, 'rgba(147, 112, 219, 0.08)'); // Medium purple
     innerGradient.addColorStop(0.5, 'rgba(138, 43, 226, 0.06)'); // Blue violet
@@ -212,7 +186,6 @@ function drawBeautifulFrame() {
     ctx.fillStyle = innerGradient;
     ctx.fill();
 
-    // Внутренняя фиолетовая граница
     const innerBorderGradient = ctx.createLinearGradient(0, innerPadding, 0, canvasSize - innerPadding);
     innerBorderGradient.addColorStop(0, 'rgba(221, 160, 221, 0.4)'); // Plum
     innerBorderGradient.addColorStop(0.5, 'rgba(186, 85, 211, 0.2)'); // Medium orchid
@@ -225,7 +198,6 @@ function drawBeautifulFrame() {
     ctx.restore();
 }
 
-// Отрисовка всех точек
 function drawAllPoints() {
     if (!ctx || !points.length) return;
 
@@ -236,7 +208,6 @@ function drawAllPoints() {
     });
 }
 
-// Точки в фиолетовом стиле
 function drawSinglePoint(x, y, hit) {
     if (!ctx) return;
 
@@ -246,13 +217,11 @@ function drawSinglePoint(x, y, hit) {
 
     ctx.save();
 
-    // Фиолетовая тень
     ctx.shadowColor = hit ? 'rgba(34, 139, 34, 0.4)' : 'rgba(220, 20, 60, 0.4)';
     ctx.shadowBlur = 12;
     ctx.shadowOffsetX = 0;
     ctx.shadowOffsetY = 3;
 
-    // Градиент для точек
     const gradient = ctx.createRadialGradient(
         pixelX - 3, pixelY - 3, 0,
         pixelX, pixelY, 12
@@ -277,7 +246,6 @@ function drawSinglePoint(x, y, hit) {
 
     ctx.shadowColor = 'transparent';
 
-    // Блик
     ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
     ctx.beginPath();
     ctx.arc(pixelX - 3, pixelY - 3, 3, 0, 2 * Math.PI);
@@ -286,19 +254,16 @@ function drawSinglePoint(x, y, hit) {
     ctx.restore();
 }
 
-// Очистка canvas
 function clearCanvas() {
     points = [];
     drawCoordinatePlane();
 }
 
-// Оси в фиолетовом стиле
 function drawAxes() {
     if (!ctx) return;
 
     ctx.save();
 
-    // Фиолетовый градиент для осей
     const axisGradient = ctx.createLinearGradient(0, 0, canvasSize, canvasSize);
     axisGradient.addColorStop(0, 'rgba(75, 0, 130, 0.7)'); // Indigo
     axisGradient.addColorStop(0.5, 'rgba(106, 90, 205, 0.8)'); // Slate blue
@@ -307,24 +272,20 @@ function drawAxes() {
     ctx.strokeStyle = axisGradient;
     ctx.lineWidth = 2;
 
-    // Ось X
     ctx.beginPath();
     ctx.moveTo(60, center);
     ctx.lineTo(canvasSize - 60, center);
     ctx.stroke();
 
-    // Ось Y
     ctx.beginPath();
     ctx.moveTo(center, 60);
     ctx.lineTo(center, canvasSize - 60);
     ctx.stroke();
 
-    // Фиолетовые стрелки
     ctx.fillStyle = 'rgba(75, 0, 130, 0.8)'; // Indigo
 
     const arrowSize = 10;
 
-    // Стрелка X
     ctx.beginPath();
     ctx.moveTo(canvasSize - 60, center);
     ctx.lineTo(canvasSize - 60 - arrowSize, center - arrowSize/2);
@@ -332,7 +293,6 @@ function drawAxes() {
     ctx.closePath();
     ctx.fill();
 
-    // Стрелка Y
     ctx.beginPath();
     ctx.moveTo(center, 60);
     ctx.lineTo(center - arrowSize/2, 60 + arrowSize);
@@ -343,7 +303,6 @@ function drawAxes() {
     ctx.restore();
 }
 
-// ЯРКИЕ полупрозрачные области с яркими непрозрачными обводками
 function drawAreas(r) {
     if (!ctx || !r || r <= 0) return;
 
@@ -352,12 +311,10 @@ function drawAreas(r) {
 
     ctx.save();
 
-    // Полупрозрачные яркие заливки
     ctx.globalAlpha = 0.4;
 
     try {
-        // 1. ПРЯМОУГОЛЬНИК - яркий синий
-        ctx.fillStyle = 'rgba(0, 123, 255, 0.8)'; // Bright blue
+        ctx.fillStyle = 'rgba(0, 123, 255, 0.8)';
         ctx.fillRect(
             center - halfRPixels,
             center - rPixels,
@@ -365,15 +322,13 @@ function drawAreas(r) {
             rPixels
         );
 
-        // 2. ЧЕТВЕРТЬ КРУГА - яркий оранжевый
-        ctx.fillStyle = 'rgba(255, 165, 0, 0.8)'; // Bright orange
+        ctx.fillStyle = 'rgba(255, 165, 0, 0.8)';
         ctx.beginPath();
         ctx.arc(center, center, halfRPixels, Math.PI/2, Math.PI, false);
         ctx.lineTo(center, center);
         ctx.closePath();
         ctx.fill();
 
-        // 3. ТРЕУГОЛЬНИК - яркий зеленый
         ctx.fillStyle = 'rgba(40, 167, 69, 0.8)'; // Bright green
         ctx.beginPath();
         ctx.moveTo(center, center);
@@ -388,23 +343,19 @@ function drawAreas(r) {
 
     ctx.restore();
 
-    // ЯРКИЕ непрозрачные обводки тех же цветов
     ctx.save();
-    ctx.globalAlpha = 1; // Полная непрозрачность!
+    ctx.globalAlpha = 1;
     ctx.lineWidth = 3;
 
-    // Обводка прямоугольника - яркий синий
-    ctx.strokeStyle = 'rgb(0, 123, 255)'; // Bright blue, БЕЗ прозрачности
+    ctx.strokeStyle = 'rgb(0, 123, 255)';
     ctx.strokeRect(center - halfRPixels, center - rPixels, halfRPixels, rPixels);
 
-    // Обводка четверти круга - яркий оранжевый
-    ctx.strokeStyle = 'rgb(255, 165, 0)'; // Bright orange, БЕЗ прозрачности
+    ctx.strokeStyle = 'rgb(255, 165, 0)';
     ctx.beginPath();
     ctx.arc(center, center, halfRPixels, Math.PI/2, Math.PI, false);
     ctx.stroke();
 
-    // Обводка треугольника - яркий зеленый
-    ctx.strokeStyle = 'rgb(40, 167, 69)'; // Bright green, БЕЗ прозрачности
+    ctx.strokeStyle = 'rgb(40, 167, 69)';
     ctx.beginPath();
     ctx.moveTo(center, center);
     ctx.lineTo(center + halfRPixels, center);
@@ -415,7 +366,6 @@ function drawAreas(r) {
     ctx.restore();
 }
 
-// Шкала в фиолетовом стиле
 function drawCleanScale() {
     if (!ctx) return;
 
@@ -432,13 +382,11 @@ function drawCleanScale() {
     divisions.forEach(factor => {
         const pixels = factor * scale;
 
-        // Метки на оси X
         const x = center + pixels;
         if (x >= 80 && x <= canvasSize - 80) {
             const label = factor === 1 ? 'R' : factor === -1 ? '-R' : `${factor}R`;
             ctx.fillText(label, x, center + 30);
 
-            // Деления на оси X
             ctx.strokeStyle = 'rgba(106, 90, 205, 0.6)'; // Slate blue
             ctx.lineWidth = 2;
             ctx.beginPath();
@@ -447,13 +395,11 @@ function drawCleanScale() {
             ctx.stroke();
         }
 
-        // Метки на оси Y
         const y = center - pixels;
         if (y >= 80 && y <= canvasSize - 80) {
             const label = factor === 1 ? 'R' : factor === -1 ? '-R' : `${factor}R`;
             ctx.fillText(label, center - 40, y);
 
-            // Деления на оси Y
             ctx.strokeStyle = 'rgba(106, 90, 205, 0.6)'; // Slate blue
             ctx.lineWidth = 2;
             ctx.beginPath();
@@ -463,7 +409,6 @@ function drawCleanScale() {
         }
     });
 
-    // Подписи осей
     ctx.font = 'bold 16px -apple-system, BlinkMacSystemFont, sans-serif';
     ctx.fillStyle = 'rgba(72, 61, 139, 0.9)'; // Dark slate blue
     ctx.fillText('X', canvasSize - 50, center - 20);
@@ -473,7 +418,6 @@ function drawCleanScale() {
     ctx.restore();
 }
 
-// Обработка клика
 function handleCanvasClick(event) {
     if (!canvas) return;
 
@@ -493,7 +437,6 @@ function handleCanvasClick(event) {
     }
 }
 
-// Остальные функции
 function addPointToCanvas(x, y, hit, r) {
     if (typeof x !== 'number' || typeof y !== 'number') {
         console.error('Некорректные координаты точки');
@@ -549,7 +492,6 @@ function resizeCanvas(newSize) {
     }
 }
 
-// Экспорт функций
 window.drawCoordinatePlane = drawCoordinatePlane;
 window.addPointToCanvas = addPointToCanvas;
 window.clearCanvas = clearCanvas;

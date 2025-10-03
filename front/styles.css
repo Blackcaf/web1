@@ -1,9 +1,6 @@
-/* Импорт SF Pro шрифтов (iOS стиль) */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
-/* iOS переменные */
 :root {
-    /* iOS цвета */
     --ios-blue: rgba(115, 37, 252, 0.47);
     --ios-blue-light: #5AC8FA;
     --ios-purple: #AF52DE;
@@ -15,35 +12,29 @@
     --ios-teal: #5AC8FA;
     --ios-indigo: #5856D6;
 
-    /* iOS фоны */
     --ios-bg-primary: rgba(255, 255, 255, 0.8);
     --ios-bg-secondary: rgba(255, 255, 255, 0.6);
     --ios-bg-tertiary: rgba(255, 255, 255, 0.4);
     --ios-glass: rgba(255, 255, 255, 0.25);
     --ios-glass-border: rgba(255, 255, 255, 0.3);
 
-    /* iOS тени */
     --ios-shadow-small: 0 1px 3px rgba(0, 0, 0, 0.12);
     --ios-shadow-medium: 0 4px 16px rgba(0, 0, 0, 0.12);
     --ios-shadow-large: 0 8px 32px rgba(0, 0, 0, 0.16);
 
-    /* iOS радиусы */
     --ios-radius-small: 12px;
     --ios-radius-medium: 16px;
     --ios-radius-large: 24px;
     --ios-radius-xl: 32px;
 
-    /* iOS анимации */
     --ios-ease: cubic-bezier(0.2, 0.8, 0.4, 1);
     --ios-duration: 0.35s;
 
-    /* Текст */
     --text-primary: #1D1D1F;
     --text-secondary: #86868B;
     --text-tertiary: #C7C7CC;
 }
 
-/* Сброс стилей */
 * {
     margin: 0;
     padding: 0;
@@ -66,7 +57,6 @@ body {
     -moz-osx-font-smoothing: grayscale;
 }
 
-/* iOS стиль карточек */
 .ios-card {
     background: var(--ios-glass);
     backdrop-filter: blur(20px) saturate(180%);
@@ -99,7 +89,6 @@ body {
     border-color: rgba(255, 255, 255, 0.4);
 }
 
-/* Шапка iOS стиль */
 .header {
     background: var(--ios-glass);
     backdrop-filter: blur(30px) saturate(180%);
@@ -154,7 +143,6 @@ body {
     color: var(--ios-blue);
 }
 
-/* Основной контейнер */
 .main-container {
     max-width: 1200px;
     margin: 32px auto;
@@ -180,7 +168,6 @@ body {
     grid-row: 2;
 }
 
-/* Секции */
 section {
     padding: 32px;
     animation: slideUp 0.6s var(--ios-ease);
@@ -213,7 +200,6 @@ section {
     font-size: 28px;
 }
 
-/* Форма */
 .coordinate-form {
     display: flex;
     flex-direction: column;
@@ -235,7 +221,6 @@ section {
     gap: 8px;
 }
 
-/* iOS кнопки */
 .ios-button {
     padding: 16px 24px;
     border: none;
@@ -272,7 +257,6 @@ section {
     box-shadow: 0 4px 16px rgba(0, 122, 255, 0.3);
 }
 
-/* Кнопки X */
 .x-buttons {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
@@ -284,7 +268,6 @@ section {
     font-size: 17px;
 }
 
-/* Поле Y */
 .input-group {
     display: flex;
     align-items: center;
@@ -331,7 +314,6 @@ section {
     backdrop-filter: blur(10px);
 }
 
-/* Исправленные радио кнопки */
 .r-radios {
     display: flex;
     gap: 12px;
@@ -395,7 +377,6 @@ section {
     color: white;
 }
 
-/* Основная кнопка */
 .submit-btn {
     padding: 18px 32px;
     background: var(--ios-blue);
@@ -433,7 +414,6 @@ section {
     transition-duration: 0.1s;
 }
 
-/* Canvas */
 .canvas-container {
     display: flex;
     flex-direction: column;
@@ -493,7 +473,6 @@ section {
     font-weight: 700;
 }
 
-/* Исправленная таблица */
 .table-container {
     border-radius: var(--ios-radius-large);
     overflow: hidden;
@@ -557,7 +536,6 @@ section {
     font-weight: 700;
 }
 
-/* Пустое состояние */
 .empty-state {
     text-align: center;
     padding: 48px 32px;
@@ -573,7 +551,6 @@ section {
     opacity: 0.6;
 }
 
-/* Кнопка очистки */
 .clear-btn {
     margin-top: 24px;
     padding: 14px 24px;
@@ -594,7 +571,6 @@ section {
     box-shadow: 0 4px 16px rgba(255, 59, 48, 0.3);
 }
 
-/* Исправленное модальное окно */
 .modal {
     display: none;
     position: fixed;
@@ -686,7 +662,6 @@ section {
     margin: 0;
 }
 
-/* Ошибки */
 .error-message {
     color: var(--ios-red);
     font-size: 15px;
@@ -712,7 +687,6 @@ section {
     background: rgba(255, 59, 48, 0.1);
 }
 
-/* Загрузочный индикатор */
 .loading {
     display: none;
     position: fixed;
@@ -756,6 +730,7 @@ section {
     font-weight: 600;
     margin: 0;
 }
+
 @media (max-width: 1400px) {
     .main-container {
         grid-template-columns: 1fr;
@@ -777,6 +752,7 @@ section {
         grid-row: 3;
     }
 }
+
 @media (min-width: 1024px) {
     #coordinatePlane {
         width: 600px;
@@ -784,7 +760,6 @@ section {
     }
 }
 
-/* Для планшетов */
 @media (max-width: 1024px) and (min-width: 768px) {
     #coordinatePlane {
         width: 500px;
@@ -802,12 +777,14 @@ section {
         padding: 24px 16px;
     }
 }
+
 @media (max-width: 600px) {
     #coordinatePlane {
         width: 400px;
         height: 400px;
     }
 }
+
 @media (max-width: 480px) {
     #coordinatePlane {
         width: 350px;
@@ -822,7 +799,7 @@ section {
         padding: 24px 16px;
     }
 }
-/* Модальное окно подтверждения (пункт 3) */
+
 .modal-actions {
     display: flex;
     gap: 12px;
@@ -862,5 +839,3 @@ section {
     background: rgba(0, 0, 0, 0.1);
     transform: translateY(-1px);
 }
-
-/* Загрузочный индикатор */

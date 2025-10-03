@@ -3,22 +3,29 @@ package com.nlshakal;
 import com.fastcgi.FCGIInterface;
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.TimeZone;
 
 public class ResponseSender {
   private final Checker checker = new Checker();
   private final JsonParser parser = new JsonParser();
 
+  private final SimpleDateFormat dateFormatter;
+
+  public ResponseSender() {
+    dateFormatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
+    dateFormatter.setTimeZone(TimeZone.getTimeZone("UTC"));
+  }
+
   public void sendResponse() {
     try {
       long startTime = System.nanoTime();
 
-      // Проверка метода запроса (пункт 6)
       String method = FCGIInterface.request.params.getProperty("REQUEST_METHOD");
       if (method == null || !"POST".equalsIgnoreCase(method)) {
         sendMethodNotAllowed("Only POST method is allowed. Received: " + method);
@@ -30,7 +37,6 @@ public class ResponseSender {
       BigDecimal y = data[1];
       BigDecimal r = data[2];
 
-      // Валидация на сервере (пункт 1)
       try {
         this.checker.validate(x, y, r);
       } catch (IllegalArgumentException e) {
@@ -43,12 +49,12 @@ public class ResponseSender {
       double scriptTimeMs = (endTime - startTime) / 1000000.0D;
 
       Map<String, Object> response = new LinkedHashMap<>();
-      // Используем toPlainString() для сохранения всех знаков (пункт 5)
       response.put("x", x.toPlainString());
       response.put("y", y.toPlainString());
       response.put("r", r.toPlainString());
       response.put("hit", Boolean.valueOf(hit));
-      response.put("currentTime", (new Date()).toString());
+
+      response.put("currentTime", dateFormatter.format(new Date()));
       response.put("scriptTimeMs", String.format("%.2f", Double.valueOf(scriptTimeMs)));
 
       sendJson(response);

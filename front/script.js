@@ -1,18 +1,14 @@
-// Глобальные переменные
 let selectedX = null;
 let selectedY = null;
 let selectedR = null;
 
-// Функция для получения текущего R
 function getCurrentR() {
     return selectedR;
 }
 
-// Экспорт функций в window
 window.currentR = getCurrentR;
 window.addPointFromCanvas = addPointFromCanvas;
 
-// Инициализация
 document.addEventListener('DOMContentLoaded', function() {
     console.log('DOM загружен, инициализация...');
 
@@ -21,7 +17,7 @@ document.addEventListener('DOMContentLoaded', function() {
         initializeModal();
         initializeTable();
         loadStoredResults();
-        initializeConfirmModal(); // Новая функция для модалки подтверждения
+        initializeConfirmModal();
 
         console.log('Инициализация завершена успешно');
     } catch (error) {
@@ -29,11 +25,9 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-// Инициализация формы
 function initializeForm() {
     console.log('Инициализация формы...');
 
-    // X кнопки
     const xButtons = document.querySelectorAll('.x-btn');
     console.log('Найдено X кнопок:', xButtons.length);
 
@@ -44,36 +38,29 @@ function initializeForm() {
 
             selectedX = parseFloat(this.dataset.value);
 
-            // Убираем активный класс со всех кнопок
             xButtons.forEach(btn => btn.classList.remove('active'));
-            // Добавляем активный класс к текущей
             this.classList.add('active');
 
             validateX();
         });
     });
 
-    // Y поле - улучшенная обработка (пункт 7)
     const yInput = document.getElementById('y-input');
     if (yInput) {
-        // Предотвращаем вставку недопустимых символов
         yInput.addEventListener('keypress', function(e) {
             const char = String.fromCharCode(e.which);
             const value = this.value;
 
-            // Разрешаем: цифры, точку, запятую, минус (только в начале)
             if (!/[\d.,\-]/.test(char)) {
                 e.preventDefault();
                 return;
             }
 
-            // Минус только в начале
             if (char === '-' && value.length > 0) {
                 e.preventDefault();
                 return;
             }
 
-            // Только одна точка или запятая
             if ((char === '.' || char === ',') && (value.includes('.') || value.includes(','))) {
                 e.preventDefault();
                 return;
@@ -83,22 +70,18 @@ function initializeForm() {
         yInput.addEventListener('input', function() {
             let value = this.value.trim();
 
-            // Заменяем запятую на точку
             value = value.replace(',', '.');
 
-            // Не обрезаем знаки после запятой (пункт 5)
             selectedY = value ? value : null;
             console.log('Введен Y:', selectedY);
             validateY();
         });
 
-        // Предотвращаем изменение через инспектор (пункт 7)
         yInput.addEventListener('paste', function(e) {
             e.preventDefault();
             const pastedText = (e.clipboardData || window.clipboardData).getData('text');
             const cleanedText = pastedText.replace(',', '.').trim();
 
-            // Проверяем, что вставляемый текст - это число
             if (/^-?\d*\.?\d*$/.test(cleanedText)) {
                 this.value = cleanedText;
                 selectedY = cleanedText;
@@ -107,7 +90,6 @@ function initializeForm() {
         });
     }
 
-    // R радио кнопки
     const rRadios = document.querySelectorAll('input[name="r"]');
     console.log('Найдено R радио:', rRadios.length);
 
@@ -120,7 +102,6 @@ function initializeForm() {
                 updateCurrentRDisplay();
                 validateR();
 
-                // Перерисовать график
                 setTimeout(() => {
                     if (window.drawCoordinatePlane) {
                         window.drawCoordinatePlane();
@@ -130,7 +111,6 @@ function initializeForm() {
         });
     });
 
-    // Форма
     const form = document.getElementById('coordinateForm');
     if (form) {
         form.addEventListener('submit', function(e) {
@@ -139,7 +119,6 @@ function initializeForm() {
         });
     }
 
-    // Кнопка очистки с красивым модальным окном (пункт 3)
     const clearButton = document.getElementById('clear-results');
     if (clearButton) {
         clearButton.addEventListener('click', function() {
@@ -150,7 +129,6 @@ function initializeForm() {
     }
 }
 
-// Обновление отображения текущего R
 function updateCurrentRDisplay() {
     const currentRSpan = document.getElementById('current-r');
     if (currentRSpan) {
@@ -158,7 +136,6 @@ function updateCurrentRDisplay() {
     }
 }
 
-// УЛУЧШЕННАЯ ВАЛИДАЦИЯ (пункт 1 и 7)
 function validateX() {
     const errorElement = document.getElementById('x-error');
     if (!errorElement) return true;
@@ -187,7 +164,6 @@ function validateY() {
         return false;
     }
 
-    // Преобразуем в число для проверки диапазона
     const numY = parseFloat(selectedY);
 
     if (isNaN(numY)) {
@@ -223,7 +199,6 @@ function validateR() {
     return true;
 }
 
-// Показать ошибку
 function showError(element, message) {
     if (element) {
         element.textContent = message;
@@ -232,7 +207,6 @@ function showError(element, message) {
     }
 }
 
-// Скрыть ошибку
 function hideError(element) {
     if (element) {
         element.textContent = '';
@@ -241,7 +215,6 @@ function hideError(element) {
     }
 }
 
-// Обработка отправки формы
 function handleFormSubmit() {
     console.log('Отправка формы:', { x: selectedX, y: selectedY, r: selectedR });
 
@@ -250,27 +223,22 @@ function handleFormSubmit() {
         return;
     }
 
-    // Реальная отправка данных на FastCGI сервер
     sendDataToServer(selectedX, selectedY, selectedR);
 }
 
-// Отправка данных на FastCGI сервер (без показа загрузки для точек с canvas - пункт 2)
 function sendDataToServer(x, y, r, fromCanvas = false) {
     console.log('Отправка на сервер:', { x, y, r });
 
-    // Показываем загрузку только если это не с canvas (пункт 2)
     if (!fromCanvas) {
         showLoading(true);
     }
 
-    // Отправляем Y как строку для сохранения всех знаков (пункт 5)
     const data = {
         x: x,
-        y: String(y), // Отправляем как строку
+        y: String(y),
         r: r
     };
 
-    // Исправленный URL для FastCGI
     fetch('/calculate', {
         method: 'POST',
         headers: {
@@ -299,7 +267,6 @@ function sendDataToServer(x, y, r, fromCanvas = false) {
         });
 }
 
-// Обработка ответа сервера
 function handleServerResponse(data) {
     if (data.error) {
         showModal('Ошибка сервера: ' + data.error);
@@ -312,7 +279,6 @@ function handleServerResponse(data) {
     saveResultToStorage(data);
 
     if (window.addPointToCanvas) {
-        // Используем исходные значения из ответа
         window.addPointToCanvas(parseFloat(data.x), parseFloat(data.y), data.hit, parseFloat(data.r));
     }
 
@@ -320,7 +286,6 @@ function handleServerResponse(data) {
     clearForm();
 }
 
-// Обработка ошибки сервера
 function handleServerError(error) {
     let errorMessage = 'Ошибка при отправке запроса на сервер';
 
@@ -337,7 +302,6 @@ function handleServerError(error) {
     showModal(errorMessage);
 }
 
-// Добавление результата в таблицу
 function addResultToTable(data) {
     const tableBody = document.getElementById('results-body');
     if (!tableBody) return;
@@ -348,7 +312,6 @@ function addResultToTable(data) {
     const resultText = data.hit ? 'Попадание' : 'Промах';
     const resultClass = data.hit ? 'result-hit' : 'result-miss';
 
-    // Отображаем Y как есть, без округления
     row.innerHTML = `
         <td>${data.x}</td>
         <td>${data.y}</td>
@@ -362,7 +325,6 @@ function addResultToTable(data) {
     hideEmptyState();
 }
 
-// Форматирование времени
 function formatTime(timeString) {
     try {
         const date = new Date(timeString);
@@ -372,7 +334,6 @@ function formatTime(timeString) {
     }
 }
 
-// Очистка формы
 function clearForm() {
     selectedX = null;
     selectedY = null;
@@ -382,14 +343,12 @@ function clearForm() {
     const yInput = document.getElementById('y-input');
     if (yInput) yInput.value = '';
 
-    // Очищаем ошибки
     ['x-error', 'y-error'].forEach(id => {
         const errorElement = document.getElementById(id);
         if (errorElement) hideError(errorElement);
     });
 }
 
-// Очистка результатов
 function clearResults() {
     const tableBody = document.getElementById('results-body');
     if (tableBody) {
@@ -405,7 +364,6 @@ function clearResults() {
     showEmptyState();
 }
 
-// Сохранение в localStorage
 function saveResultToStorage(data) {
     try {
         let results = JSON.parse(localStorage.getItem('web1_results') || '[]');
@@ -421,7 +379,6 @@ function saveResultToStorage(data) {
     }
 }
 
-// Загрузка из localStorage
 function loadStoredResults() {
     try {
         const results = JSON.parse(localStorage.getItem('web1_results') || '[]');
@@ -446,7 +403,6 @@ function loadStoredResults() {
     }
 }
 
-// Функция для добавления точки с canvas (без загрузки - пункт 2)
 function addPointFromCanvas(x, y) {
     console.log('Добавление точки с canvas:', { x, y });
 
@@ -465,11 +421,9 @@ function addPointFromCanvas(x, y) {
         return;
     }
 
-    // Отправляем БЕЗ показа загрузки (пункт 2)
     sendDataToServer(x, y, selectedR, true);
 }
 
-// Инициализация модального окна
 function initializeModal() {
     const modal = document.getElementById('error-modal');
     if (!modal) return;
@@ -492,7 +446,6 @@ function initializeModal() {
     });
 }
 
-// Показать модальное окно
 function showModal(message) {
     const modal = document.getElementById('error-modal');
     const errorText = document.getElementById('error-text');
@@ -503,7 +456,6 @@ function showModal(message) {
     }
 }
 
-// Скрыть модальное окно
 function hideModal() {
     const modal = document.getElementById('error-modal');
     if (modal) {
@@ -511,9 +463,7 @@ function hideModal() {
     }
 }
 
-// НОВОЕ: Инициализация модального окна подтверждения (пункт 3)
 function initializeConfirmModal() {
-    // Создаем модальное окно подтверждения, если его еще нет
     if (!document.getElementById('confirm-modal')) {
         const confirmModalHTML = `
             <div id="confirm-modal" class="modal">
@@ -541,7 +491,6 @@ function initializeConfirmModal() {
     const backdrop = modal.querySelector('.modal-backdrop');
     const noBtn = document.getElementById('confirm-no');
 
-    // Обработчики для закрытия
     [closeBtn, backdrop, noBtn].forEach(element => {
         if (element) {
             element.addEventListener('click', hideConfirmModal);
@@ -549,7 +498,6 @@ function initializeConfirmModal() {
     });
 }
 
-// Показать модальное окно подтверждения (пункт 3)
 function showConfirmModal(title, message, onConfirm) {
     const modal = document.getElementById('confirm-modal');
     const titleEl = document.getElementById('confirm-title');
@@ -560,7 +508,6 @@ function showConfirmModal(title, message, onConfirm) {
         titleEl.textContent = title;
         textEl.textContent = message;
 
-        // Удаляем старый обработчик и добавляем новый
         const newYesBtn = yesBtn.cloneNode(true);
         yesBtn.parentNode.replaceChild(newYesBtn, yesBtn);
 
@@ -573,7 +520,6 @@ function showConfirmModal(title, message, onConfirm) {
     }
 }
 
-// Скрыть модальное окно подтверждения
 function hideConfirmModal() {
     const modal = document.getElementById('confirm-modal');
     if (modal) {
@@ -581,7 +527,6 @@ function hideConfirmModal() {
     }
 }
 
-// Показать/скрыть загрузку
 function showLoading(show) {
     const loading = document.getElementById('loading');
     if (loading) {
@@ -589,12 +534,10 @@ function showLoading(show) {
     }
 }
 
-// Инициализация таблицы
 function initializeTable() {
     showEmptyState();
 }
 
-// Показать пустое состояние
 function showEmptyState() {
     const emptyState = document.getElementById('empty-state');
     if (emptyState) {
@@ -602,7 +545,6 @@ function showEmptyState() {
     }
 }
 
-// Скрыть пустое состояние
 function hideEmptyState() {
     const emptyState = document.getElementById('empty-state');
     if (emptyState) {
@@ -610,9 +552,7 @@ function hideEmptyState() {
     }
 }
 
-// Защита от изменения через консоль (пункт 7)
 (function() {
-    // Защищаем критические переменные
     Object.defineProperty(window, 'selectedX', {
         get: function() { return selectedX; },
         set: function() { console.warn('Попытка изменить защищенную переменную'); },

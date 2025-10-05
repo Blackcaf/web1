@@ -17,16 +17,18 @@ public class ResponseSender {
   private final RequestParser parser;
   private final OutputHandler outputHandler;
   private final SimpleDateFormat dateFormatter;
+  private final ShapeEndpointHandler shapeHandler;
 
   public ResponseSender() {
-    this(new Validator(), new HitChecker(), new JsonParser(), new FastCGIOutputHandler());
+    this(new Validator(), new HitChecker(), new JsonParser(), new FastCGIOutputHandler(), new ShapeEndpointHandler());
   }
 
-  public ResponseSender(PointValidator validator, PointValidator hitChecker, RequestParser parser, OutputHandler outputHandler) {
+  public ResponseSender(PointValidator validator, PointValidator hitChecker, RequestParser parser, OutputHandler outputHandler, ShapeEndpointHandler shapeHandler) {
     this.validator = validator;
     this.hitChecker = hitChecker;
     this.parser = parser;
     this.outputHandler = outputHandler;
+    this.shapeHandler = shapeHandler;
     this.dateFormatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
     this.dateFormatter.setTimeZone(TimeZone.getTimeZone("UTC"));
   }
@@ -36,8 +38,8 @@ public class ResponseSender {
       long startTime = System.nanoTime();
 
       String requestUri = FCGIInterface.request.params.getProperty("REQUEST_URI");
-      if (requestUri == null || !requestUri.equals("/calculate")) {
-        sendNotFound("Endpoint not found. Use /calculate");
+      if (requestUri == null) {
+        sendNotFound("Request URI is missing");
         return;
       }
 
@@ -47,36 +49,96 @@ public class ResponseSender {
         return;
       }
 
-      BigDecimal[] data = readRequestBody();
-      BigDecimal x = data[0];
-      BigDecimal y = data[1];
-      BigDecimal r = data[2];
-
-      try {
-        validator.validate(x, y, r);
-      } catch (IllegalArgumentException e) {
-        sendError(e.getMessage());
-        return;
+      // Обработка различных эндпоинтов
+      if (requestUri.equals("/calculate")) {
+        handleCalculateAll(startTime);
+      } else if (requestUri.equals("/calculate/circle")) {
+        handleCalculateShape(startTime, "circle");
+      } else if (requestUri.equals("/calculate/rectangle")) {
+        handleCalculateShape(startTime, "rectangle");
+      } else if (requestUri.equals("/calculate/triangle")) {
+        handleCalculateShape(startTime, "triangle");
+      } else {
+        sendNotFound("Endpoint not found. Available endpoints: /calculate, /calculate/circle, /calculate/rectangle, /calculate/triangle");
       }
-
-      boolean hit = hitChecker.isHit(x, y, r);
-      long endTime = System.nanoTime();
-      double scriptTimeMs = (endTime - startTime) / 1000000.0D;
-
-      Map<String, Object> response = new LinkedHashMap<>();
-      response.put("x", x.toPlainString());
-      response.put("y", y.toPlainString());
-      response.put("r", r.toPlainString());
-      response.put("hit", Boolean.valueOf(hit));
-      response.put("currentTime", dateFormatter.format(new Date()));
-      response.put("scriptTimeMs", String.format("%.2f", Double.valueOf(scriptTimeMs)));
-
-      sendJson(response);
     } catch (IllegalArgumentException e) {
       sendError(e.getMessage());
     } catch (Exception e) {
       sendServerError("Server error: " + e.getMessage());
     }
+  }
+
+  private void handleCalculateAll(long startTime) throws IOException {
+    BigDecimal[] data = readRequestBody();
+    BigDecimal x = data[0];
+    BigDecimal y = data[1];
+    BigDecimal r = data[2];
+
+    try {
+      validator.validate(x, y, r);
+    } catch (IllegalArgumentException e) {
+      sendError(e.getMessage());
+      return;
+    }
+
+    boolean hit = hitChecker.isHit(x, y, r);
+    long endTime = System.nanoTime();
+    double scriptTimeMs = (endTime - startTime) / 1000000.0D;
+
+    Map<String, Object> response = new LinkedHashMap<>();
+    response.put("x", x.toPlainString());
+    response.put("y", y.toPlainString());
+    response.put("r", r.toPlainString());
+    response.put("hit", Boolean.valueOf(hit));
+    response.put("shape", "all");
+    response.put("currentTime", dateFormatter.format(new Date()));
+    response.put("scriptTimeMs", String.format("%.2f", Double.valueOf(scriptTimeMs)));
+
+    sendJson(response);
+  }
+
+  private void handleCalculateShape(long startTime, String shape) throws IOException {
+    BigDecimal[] data = readRequestBody();
+    BigDecimal x = data[0];
+    BigDecimal y = data[1];
+    BigDecimal r = data[2];
+
+    try {
+      validator.validate(x, y, r);
+    } catch (IllegalArgumentException e) {
+      sendError(e.getMessage());
+      return;
+    }
+
+    boolean hit;
+    switch (shape) {
+      case "circle":
+        hit = shapeHandler.handleCircle(x, y, r);
+        break;
+      case "rectangle":
+        hit = shapeHandler.handleRectangle(x, y, r);
+        break;
+      case "triangle":
+        hit = shapeHandler.handleTriangle(x, y, r);
+        break;
+      default:
+        sendError("Unknown shape: " + shape);
+        return;
+    }
+
+    long endTime = System.nanoTime();
+    double scriptTimeMs = (endTime - startTime) / 1000000.0D;
+
+    Map<String, Object> response = new LinkedHashMap<>();
+    response.put("x", x.toPlainString());
+    response.put("y", y.toPlainString());
+    response.put("r", r.toPlainString());
+    response.put("hit", Boolean.valueOf(hit));
+    response.put("shape", shape);
+    response.put("currentTime", dateFormatter.format(new Date()));
+    response.put("scriptTimeMs", String.format("%.2f", Double.valueOf(scriptTimeMs)));
+
+    sendJson(response);
   }
 
   private BigDecimal[] readRequestBody() throws IOException {

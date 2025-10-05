@@ -659,3 +659,23 @@ function hideEmptyState() {
         configurable: false
     });
 })();
+function sendDataToShape(x, y, r, shape) {
+    const endpoint = shape ? `/calculate/${shape}` : '/calculate';
+
+    fetch(endpoint, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ x, y: String(y), r })
+    })
+        .then(response => response.json())
+        .then(data => {
+            console.log(`Shape ${shape || 'all'}:`, data);
+            handleServerResponse(data);
+        })
+        .catch(error => {
+            console.error('Ошибка:', error);
+            handleServerError(error);
+        });
+}

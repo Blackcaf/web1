@@ -6,7 +6,7 @@ public class Validator implements PointValidator {
   @Override
   public void validate(BigDecimal x, BigDecimal y, BigDecimal r) {
     if (x == null || y == null || r == null) {
-      throw new IllegalArgumentException("X, Y, R cannot be null");
+      throw new IllegalArgumentException("X, Y, R не могут быть null");
     }
 
     if (x.compareTo(Config.X_MIN) < 0 || x.compareTo(Config.X_MAX) > 0) {

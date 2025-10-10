@@ -20,10 +20,10 @@ public class JsonParser implements RequestParser {
       this.originalYString = yStr;
 
       if (!yStr.matches("^-?\\d*\\.?\\d+$")) {
-        throw new IllegalArgumentException("Y must be a valid decimal number");
+        throw new IllegalArgumentException("Y должен быть допустимым десятичным числом");
       }
       if (yStr.length() > 100) {
-        throw new IllegalArgumentException("Y value is too long (max 100 characters)");
+        throw new IllegalArgumentException("Y значение слишком длинное (максимум 100 символов)");
       }
 
       BigDecimal x = new BigDecimal(xStr, MC);
@@ -32,7 +32,7 @@ public class JsonParser implements RequestParser {
 
       return new BigDecimal[] { x, y, r };
     } catch (Exception e) {
-      throw new IllegalArgumentException("Invalid JSON format: " + e.getMessage());
+      throw new IllegalArgumentException("Неверный формат JSON: " + e.getMessage());
     }
   }
 

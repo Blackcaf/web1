@@ -6,7 +6,7 @@ public class HitChecker implements PointValidator {
   @Override
   public void validate(BigDecimal x, BigDecimal y, BigDecimal r) {
     // Пустая реализация, так как валидация выполняется в Validator
-    throw new UnsupportedOperationException("Validation not supported by HitChecker");
+    throw new UnsupportedOperationException("Проверка не поддерживается HitChecker");
   }
 
   @Override

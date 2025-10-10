@@ -39,17 +39,16 @@ public class ResponseSender {
 
       String requestUri = FCGIInterface.request.params.getProperty("REQUEST_URI");
       if (requestUri == null) {
-        sendNotFound("Request URI is missing");
+        sendNotFound("Отсутствует URI запроса");
         return;
       }
 
       String method = FCGIInterface.request.params.getProperty("REQUEST_METHOD");
       if (method == null || !"POST".equalsIgnoreCase(method)) {
-        sendMethodNotAllowed("Only POST method is allowed. Received: " + method);
+        sendMethodNotAllowed("Только POST допустим. Получен: " + method);
         return;
       }
 
-      // Обработка различных эндпоинтов
       if (requestUri.equals("/calculate")) {
         handleCalculateAll(startTime);
       } else if (requestUri.equals("/calculate/circle")) {
@@ -59,12 +58,12 @@ public class ResponseSender {
       } else if (requestUri.equals("/calculate/triangle")) {
         handleCalculateShape(startTime, "triangle");
       } else {
-        sendNotFound("Endpoint not found. Available endpoints: /calculate, /calculate/circle, /calculate/rectangle, /calculate/triangle");
+        sendNotFound("Эндпоинт не найден. Доступные: /calculate, /calculate/circle, /calculate/rectangle, /calculate/triangle");
       }
     } catch (IllegalArgumentException e) {
       sendError(e.getMessage());
     } catch (Exception e) {
-      sendServerError("Server error: " + e.getMessage());
+      sendServerError("Ошибка сервера: " + e.getMessage());
     }
   }
 
@@ -122,7 +121,7 @@ public class ResponseSender {
         hit = shapeHandler.handleTriangle(x, y, r);
         break;
       default:
-        sendError("Unknown shape: " + shape);
+        sendError("Неизвестная фигура: " + shape);
         return;
     }
 

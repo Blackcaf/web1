@@ -4,7 +4,7 @@ import com.fastcgi.FCGIInterface;
 
 public class Main {
   public static void main(String[] args) {
-    System.setProperty("FCGI_PORT", "25501");
+    System.setProperty("FCGI_PORT", "25500");
     FCGIInterface fcgiInterface = new FCGIInterface();
     ResponseSender sender = new ResponseSender();
     while (fcgiInterface.FCGIaccept() >= 0) {

@@ -31,7 +31,7 @@
     --ios-duration: 0.35s;
 
     --text-primary: #1D1D1F;
-    --text-secondary: rgba(255, 255, 255, 0.46);
+    --text-secondary: rgb(0, 0, 0);
     --text-tertiary: #C7C7CC;
 }
 
@@ -931,6 +931,20 @@ section {
     .tooltip-number {
         font-size: 14px;
     }
+
+    .x-buttons {
+        grid-template-columns: repeat(4, 1fr);
+    }
+
+    .input-group {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .input-hint {
+        min-width: auto;
+        width: 100%;
+    }
 }
 
 @media (max-width: 1024px) and (min-width: 768px) {
@@ -942,12 +956,18 @@ section {
 
 @media (max-width: 768px) {
     #coordinatePlane {
-        width: 500px;
-        height: 500px;
+        width: 100%;
+        max-width: 500px;
+        height: auto;
+        aspect-ratio: 1;
     }
 
     .canvas-section {
         padding: 24px 16px;
+    }
+
+    .canvas-wrapper {
+        width: 100%;
     }
 
     .value-tooltip {
@@ -964,27 +984,85 @@ section {
         font-size: 14px;
         padding: 4px 10px;
     }
+
+    .x-buttons {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+    }
+
+    .x-btn {
+        min-height: 50px;
+        font-size: 15px;
+        padding: 12px 16px;
+    }
+
+    .r-radios {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+    }
+
+    .radio-content {
+        padding: 14px 16px;
+    }
+
+    section {
+        padding: 24px 16px;
+    }
+
+    .header {
+        padding: 16px 5% 20px;
+    }
+
+    .main-title {
+        font-size: 24px;
+    }
+
+    .subtitle {
+        font-size: 15px;
+    }
 }
 
 @media (max-width: 600px) {
     #coordinatePlane {
-        width: 400px;
-        height: 400px;
+        width: 100%;
+        max-width: 400px;
+    }
+
+    .x-buttons {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+    }
+
+    .x-btn {
+        min-height: 48px;
+        font-size: 14px;
+        padding: 10px 12px;
+    }
+
+    .r-radios {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .results-table th,
+    .results-table td {
+        padding: 12px 8px;
+        font-size: 13px;
     }
 }
 
 @media (max-width: 480px) {
     #coordinatePlane {
-        width: 350px;
-        height: 350px;
+        width: 100%;
+        max-width: 350px;
     }
 
     .main-container {
-        padding: 0 16px;
+        padding: 0 12px;
     }
 
     section {
-        padding: 24px 16px;
+        padding: 20px 12px;
     }
 
     .value-tooltip {
@@ -996,5 +1074,49 @@ section {
         width: 24px;
         height: 24px;
         font-size: 14px;
+    }
+
+    .x-buttons {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .header-content {
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .info-card {
+        padding: 12px 16px;
+    }
+
+    .main-title {
+        font-size: 20px;
+    }
+
+    .results-table {
+        font-size: 12px;
+    }
+
+    .results-table th,
+    .results-table td {
+        padding: 10px 6px;
+    }
+}
+
+@media (max-width: 380px) {
+    #coordinatePlane {
+        width: 100%;
+        max-width: 300px;
+    }
+
+    .x-btn {
+        min-height: 44px;
+        font-size: 13px;
+        padding: 8px 10px;
+    }
+
+    .ios-input {
+        padding: 14px 16px;
+        font-size: 16px;
     }
 }

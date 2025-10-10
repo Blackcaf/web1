@@ -328,7 +328,6 @@ function initializeForm() {
 document.addEventListener('DOMContentLoaded', () => {
     initializeForm();
     loadStoredResults();
-    showEmptyState();
 });
 
 document.addEventListener('keydown', e => {

@@ -86,52 +86,6 @@ function showModal(title, message, buttons = []) {
     });
 }
 
-let activeTooltip = null;
-
-function toggleTooltip(element, show) {
-    activeTooltip?.remove();
-    activeTooltip = null;
-
-    if (!show || !element) return;
-
-    const fullValue = element.dataset.fullValue;
-    activeTooltip = Object.assign(document.createElement('div'), {
-        className: 'value-tooltip',
-        innerHTML: `
-            <div class="tooltip-header">
-                <span class="tooltip-label">ПОЛНОЕ ЗНАЧЕНИЕ</span>
-                <button class="tooltip-close">×</button>
-            </div>
-            <span class="tooltip-number">${fullValue}</span>
-            <div class="tooltip-arrow"></div>
-        `
-    });
-
-    document.body.appendChild(activeTooltip);
-    activeTooltip.querySelector('.tooltip-close').onclick = () => toggleTooltip();
-
-    const rect = element.getBoundingClientRect();
-    const tooltipRect = activeTooltip.getBoundingClientRect();
-
-    let left = Math.max(10, Math.min(
-        rect.left + rect.width/2 - tooltipRect.width/2,
-        window.innerWidth - tooltipRect.width - 10
-    ));
-
-    let top = rect.top - tooltipRect.height - 12;
-    if (top < 10) {
-        top = rect.bottom + 12;
-        activeTooltip.classList.add('below');
-    }
-
-    Object.assign(activeTooltip.style, {
-        left: `${left}px`,
-        top: `${top + window.scrollY}px`
-    });
-
-    requestAnimationFrame(() => activeTooltip.classList.add('visible'));
-}
-
 const ERROR_MESSAGES = {
     'Failed to fetch': 'Сервер недоступен',
     '500': 'Внутренняя ошибка сервера',
@@ -169,19 +123,6 @@ function sendDataToServer(x, y, r, fromCanvas = false) {
         .finally(() => !fromCanvas && showLoading(false));
 }
 
-function truncateNumber(value, maxLength = 20) {
-    const str = String(value);
-    return str.length <= maxLength ? str : str.substring(0, maxLength) + '...';
-}
-
-function createCell(value) {
-    const truncated = truncateNumber(value);
-    const fullValue = String(value);
-    return truncated === fullValue
-        ? truncated
-        : `<span class="truncated-value" data-full-value="${fullValue}">${truncated}</span>`;
-}
-
 function addResultToTable(data) {
     const tbody = document.getElementById('results-body');
     if (!tbody) return;
@@ -189,9 +130,9 @@ function addResultToTable(data) {
     const row = tbody.insertRow(0);
     row.className = data.hit ? 'hit' : 'miss';
     row.innerHTML = `
-        <td>${createCell(data.x)}</td>
-        <td>${createCell(data.y)}</td>
-        <td>${createCell(data.r)}</td>
+        <td>${data.x}</td>
+        <td>${data.y}</td>
+        <td>${data.r}</td>
         <td class="result-${data.hit ? 'hit' : 'miss'}">${data.hit ? 'Попадание' : 'Промах'}</td>
         <td>${new Date(data.currentTime).toLocaleString('ru-RU')}</td>
         <td>${data.scriptTimeMs} мс</td>
@@ -333,16 +274,7 @@ document.addEventListener('DOMContentLoaded', () => {
 document.addEventListener('keydown', e => {
     if (e.key === 'Escape') {
         document.getElementById('universal-modal')?.remove();
-        toggleTooltip();
     }
-});
-
-document.addEventListener('mouseover', e => {
-    if (e.target.matches('.truncated-value')) toggleTooltip(e.target, true);
-});
-
-document.addEventListener('mouseout', e => {
-    if (e.target.matches('.truncated-value')) toggleTooltip();
 });
 
 window.currentR = () => selectedR;

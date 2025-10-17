@@ -2,8 +2,7 @@ package com.nlshakal;
 
 import java.math.BigDecimal;
 
-public class HitChecker implements PointValidator {
-  @Override
+public class HitChecker{
   public boolean isHit(BigDecimal x, BigDecimal y, BigDecimal r) {
     return (checkRectangle(x, y, r) || checkCircle(x, y, r) || checkTriangle(x, y, r));
   }

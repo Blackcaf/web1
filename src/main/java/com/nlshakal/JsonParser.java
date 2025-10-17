@@ -18,6 +18,7 @@ public class JsonParser implements RequestParser {
         throw new IllegalArgumentException("Пустое тело запроса");
       }
 
+
       Pattern pairPattern = Pattern.compile("\"(x|y|r)\"\\s*:\\s*\"?(-?\\d*(?:[\\.,]\\d+)?)\"?", Pattern.CASE_INSENSITIVE);
       Matcher matcher = pairPattern.matcher(requestString);
       Map<String, String> values = new HashMap<>();
@@ -54,10 +55,5 @@ public class JsonParser implements RequestParser {
     } catch (Exception e) {
       throw new IllegalArgumentException("Неверный формат JSON: " + e.getMessage());
     }
-  }
-
-  @Override
-  public String getOriginalYString() {
-    return null;
   }
 }

@@ -34,108 +34,77 @@ public class ResponseSender {
   public void sendResponse() {
     try {
       long startTime = System.nanoTime();
-
       String requestUri = FCGIInterface.request.params.getProperty("REQUEST_URI");
+      String method = FCGIInterface.request.params.getProperty("REQUEST_METHOD");
+
       if (requestUri == null) {
-        sendNotFound("Отсутствует URI запроса");
+        sendErrorResponse(404, "Отсутствует URI запроса");
         return;
       }
 
-      String method = FCGIInterface.request.params.getProperty("REQUEST_METHOD");
       if (method == null || !"POST".equalsIgnoreCase(method)) {
         sendMethodNotAllowed("Только POST допустим. Получен: " + method);
         return;
       }
 
-      if (requestUri.equals("/calculate")) {
-        handleCalculateAll(startTime);
-      } else if (requestUri.equals("/calculate/circle")) {
-        handleCalculateShape(startTime, "circle");
-      } else if (requestUri.equals("/calculate/rectangle")) {
-        handleCalculateShape(startTime, "rectangle");
-      } else if (requestUri.equals("/calculate/triangle")) {
-        handleCalculateShape(startTime, "triangle");
-      } else {
-        sendNotFound("Эндпоинт не найден. Доступные: /calculate, /calculate/circle, /calculate/rectangle, /calculate/triangle");
-      }
-    } catch (IllegalArgumentException e) {
-      sendError(e.getMessage());
-    } catch (Exception e) {
-      sendServerError("Ошибка сервера: " + e.getMessage());
-    }
-  }
-
-  private void handleCalculateAll(long startTime) throws IOException {
-    BigDecimal[] data = readRequestBody();
-    BigDecimal x = data[0];
-    BigDecimal y = data[1];
-    BigDecimal r = data[2];
-
-    try {
-      validator.validate(x, y, r);
-    } catch (IllegalArgumentException e) {
-      sendError(e.getMessage());
-      return;
-    }
-
-    boolean hit = hitChecker.isHit(x, y, r);
-    long endTime = System.nanoTime();
-    double scriptTimeMs = (endTime - startTime) / 1000000.0D;
-
-    Map<String, Object> response = new LinkedHashMap<>();
-    response.put("x", x.toPlainString());
-    response.put("y", y.toPlainString());
-    response.put("r", r.toPlainString());
-    response.put("hit", Boolean.valueOf(hit));
-    response.put("shape", "all");
-    response.put("currentTime", dateFormatter.format(new Date()));
-    response.put("scriptTimeMs", String.format("%.2f", Double.valueOf(scriptTimeMs)));
-
-    sendJson(response);
-  }
-
-  private void handleCalculateShape(long startTime, String shape) throws IOException {
-    BigDecimal[] data = readRequestBody();
-    BigDecimal x = data[0];
-    BigDecimal y = data[1];
-    BigDecimal r = data[2];
-
-    try {
-      validator.validate(x, y, r);
-    } catch (IllegalArgumentException e) {
-      sendError(e.getMessage());
-      return;
-    }
-
-    boolean hit;
-    switch (shape) {
-      case "circle":
-        hit = hitChecker.isCircleHit(x, y, r);
-        break;
-      case "rectangle":
-        hit = hitChecker.isRectangleHit(x, y, r);
-        break;
-      case "triangle":
-        hit = hitChecker.isTriangleHit(x, y, r);
-        break;
-      default:
-        sendError("Неизвестная фигура: " + shape);
+      String shape = extractShape(requestUri);
+      if (shape == null) {
+        sendErrorResponse(404, "Эндпоинт не найден. Доступные: /calculate /calculate/circle /calculate/rectangle /calculate/triangle");
         return;
+      }
+
+      handleCalculate(startTime, shape);
+    } catch (IllegalArgumentException e) {
+      sendErrorResponse(400, e.getMessage());
+    } catch (Exception e) {
+      sendErrorResponse(500, "Ошибка сервера: " + e.getMessage());
+    }
+  }
+
+  private String extractShape(String uri) {
+    if (uri.equals("/calculate")) return "all";
+    if (uri.equals("/calculate/circle")) return "circle";
+    if (uri.equals("/calculate/rectangle")) return "rectangle";
+    if (uri.equals("/calculate/triangle")) return "triangle";
+    return null;
+  }
+
+  private void handleCalculate(long startTime, String shape) throws IOException {
+    BigDecimal[] data = readRequestBody();
+    BigDecimal x = data[0];
+    BigDecimal y = data[1];
+    BigDecimal r = data[2];
+
+    try {
+      validator.validate(x, y, r);
+    } catch (IllegalArgumentException e) {
+      sendErrorResponse(400, e.getMessage());
+      return;
     }
 
-    long endTime = System.nanoTime();
-    double scriptTimeMs = (endTime - startTime) / 1000000.0D;
+    boolean hit = calculateHit(x, y, r, shape);
+    double scriptTimeMs = (System.nanoTime() - startTime) / 1000000.0;
 
     Map<String, Object> response = new LinkedHashMap<>();
     response.put("x", x.toPlainString());
     response.put("y", y.toPlainString());
     response.put("r", r.toPlainString());
-    response.put("hit", Boolean.valueOf(hit));
+    response.put("hit", hit);
     response.put("shape", shape);
     response.put("currentTime", dateFormatter.format(new Date()));
-    response.put("scriptTimeMs", String.format("%.2f", Double.valueOf(scriptTimeMs)));
+    response.put("scriptTimeMs", String.format("%.2f", scriptTimeMs));
 
     sendJson(response);
+  }
+
+  private boolean calculateHit(BigDecimal x, BigDecimal y, BigDecimal r, String shape) {
+    switch (shape) {
+      case "all": return hitChecker.isHit(x, y, r);
+      case "circle": return hitChecker.isCircleHit(x, y, r);
+      case "rectangle": return hitChecker.isRectangleHit(x, y, r);
+      case "triangle": return hitChecker.isTriangleHit(x, y, r);
+      default: throw new IllegalArgumentException("Неизвестная фигура: " + shape);
+    }
   }
 
   private BigDecimal[] readRequestBody() throws IOException {
@@ -156,18 +125,13 @@ public class ResponseSender {
   }
 
   private void sendJson(Map<String, Object> map) {
-    String json = toJson(map);
-    sendHttpResponse(200, "OK", json);
+    sendHttpResponse(200, "OK", toJson(map));
   }
 
-  private void sendError(String message) {
+  private void sendErrorResponse(int status, String message) {
+    String statusText = getStatusText(status);
     String json = String.format("{\"error\":\"%s\"}", escapeJson(message));
-    sendHttpResponse(400, "Bad Request", json);
-  }
-
-  private void sendNotFound(String message) {
-    String json = String.format("{\"error\":\"%s\"}", escapeJson(message));
-    sendHttpResponse(404, "Not Found", json);
+    sendHttpResponse(status, statusText, json);
   }
 
   private void sendMethodNotAllowed(String message) {
@@ -183,9 +147,14 @@ public class ResponseSender {
     }
   }
 
-  private void sendServerError(String message) {
-    String json = String.format("{\"error\":\"%s\"}", escapeJson(message));
-    sendHttpResponse(500, "Internal Server Error", json);
+  private String getStatusText(int status) {
+    switch (status) {
+      case 200: return "OK";
+      case 400: return "Bad Request";
+      case 404: return "Not Found";
+      case 500: return "Internal Server Error";
+      default: return "Unknown";
+    }
   }
 
   private void sendHttpResponse(int status, String statusText, String json) {

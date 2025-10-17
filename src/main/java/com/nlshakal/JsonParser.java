@@ -18,8 +18,6 @@ public class JsonParser implements RequestParser {
         throw new IllegalArgumentException("Пустое тело запроса");
       }
 
-      // Find x, y, r by key name in any order; ignore extra fields
-      // Accept numbers with optional quotes and with ',' or '.' as decimal separators
       Pattern pairPattern = Pattern.compile("\"(x|y|r)\"\\s*:\\s*\"?(-?\\d*(?:[\\.,]\\d+)?)\"?", Pattern.CASE_INSENSITIVE);
       Matcher matcher = pairPattern.matcher(requestString);
       Map<String, String> values = new HashMap<>();

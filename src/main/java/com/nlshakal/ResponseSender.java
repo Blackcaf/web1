@@ -12,23 +12,21 @@ import java.util.Map;
 import java.util.TimeZone;
 
 public class ResponseSender {
-  private final PointValidator validator;
-  private final PointValidator hitChecker;
+  private final Validator validator;
+  private final HitChecker hitChecker;
   private final RequestParser parser;
   private final OutputHandler outputHandler;
   private final SimpleDateFormat dateFormatter;
-  private final ShapeEndpointHandler shapeHandler;
 
   public ResponseSender() {
-    this(new Validator(), new HitChecker(), new JsonParser(), new FastCGIOutputHandler(), new ShapeEndpointHandler());
+    this(new Validator(), new HitChecker(), new JsonParser(), new FastCGIOutputHandler());
   }
 
-  public ResponseSender(PointValidator validator, PointValidator hitChecker, RequestParser parser, OutputHandler outputHandler, ShapeEndpointHandler shapeHandler) {
+  public ResponseSender(Validator validator, HitChecker hitChecker, RequestParser parser, OutputHandler outputHandler) {
     this.validator = validator;
     this.hitChecker = hitChecker;
     this.parser = parser;
     this.outputHandler = outputHandler;
-    this.shapeHandler = shapeHandler;
     this.dateFormatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
     this.dateFormatter.setTimeZone(TimeZone.getTimeZone("UTC"));
   }
@@ -112,13 +110,13 @@ public class ResponseSender {
     boolean hit;
     switch (shape) {
       case "circle":
-        hit = shapeHandler.handleCircle(x, y, r);
+        hit = hitChecker.isCircleHit(x, y, r);
         break;
       case "rectangle":
-        hit = shapeHandler.handleRectangle(x, y, r);
+        hit = hitChecker.isRectangleHit(x, y, r);
         break;
       case "triangle":
-        hit = shapeHandler.handleTriangle(x, y, r);
+        hit = hitChecker.isTriangleHit(x, y, r);
         break;
       default:
         sendError("Неизвестная фигура: " + shape);
@@ -159,41 +157,17 @@ public class ResponseSender {
 
   private void sendJson(Map<String, Object> map) {
     String json = toJson(map);
-    String httpResponse = String.format(
-        "Status: 200 OK\nContent-Type: application/json\nAccess-Control-Allow-Origin: *\nContent-Length: %d\n\n%s\n",
-        json.getBytes(StandardCharsets.UTF_8).length, json
-    );
-    try {
-      outputHandler.send(httpResponse);
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
+    sendHttpResponse(200, "OK", json);
   }
 
   private void sendError(String message) {
     String json = String.format("{\"error\":\"%s\"}", escapeJson(message));
-    String httpResponse = String.format(
-        "Status: 400 Bad Request\nContent-Type: application/json\nAccess-Control-Allow-Origin: *\nContent-Length: %d\n\n%s\n",
-        json.getBytes(StandardCharsets.UTF_8).length, json
-    );
-    try {
-      outputHandler.send(httpResponse);
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
+    sendHttpResponse(400, "Bad Request", json);
   }
 
   private void sendNotFound(String message) {
     String json = String.format("{\"error\":\"%s\"}", escapeJson(message));
-    String httpResponse = String.format(
-        "Status: 404 Not Found\nContent-Type: application/json\nAccess-Control-Allow-Origin: *\nContent-Length: %d\n\n%s\n",
-        json.getBytes(StandardCharsets.UTF_8).length, json
-    );
-    try {
-      outputHandler.send(httpResponse);
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
+    sendHttpResponse(404, "Not Found", json);
   }
 
   private void sendMethodNotAllowed(String message) {
@@ -211,9 +185,13 @@ public class ResponseSender {
 
   private void sendServerError(String message) {
     String json = String.format("{\"error\":\"%s\"}", escapeJson(message));
+    sendHttpResponse(500, "Internal Server Error", json);
+  }
+
+  private void sendHttpResponse(int status, String statusText, String json) {
     String httpResponse = String.format(
-        "Status: 500 Internal Server Error\nContent-Type: application/json\nAccess-Control-Allow-Origin: *\nContent-Length: %d\n\n%s\n",
-        json.getBytes(StandardCharsets.UTF_8).length, json
+        "Status: %d %s\nContent-Type: application/json\nAccess-Control-Allow-Origin: *\nContent-Length: %d\n\n%s\n",
+        status, statusText, json.getBytes(StandardCharsets.UTF_8).length, json
     );
     try {
       outputHandler.send(httpResponse);

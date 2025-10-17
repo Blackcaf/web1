@@ -74,7 +74,7 @@ section { padding: 25px; }
 
 .form-label { font-weight: bold; font-size: 16px; }
 
-.ios-button {
+.ios-button, .submit-btn, .clear-btn {
     padding: 12px 20px;
     border: 2px solid #2196F3;
     border-radius: 5px;
@@ -89,6 +89,31 @@ section { padding: 25px; }
 .ios-button:hover, .ios-button.active {
     background: #2196F3;
     color: white;
+}
+
+.submit-btn {
+    background: #4CAF50;
+    color: white;
+    border-color: #4CAF50;
+    padding: 15px 30px;
+    margin-top: 10px;
+}
+
+.submit-btn:hover {
+    background: #45a049;
+}
+
+.clear-btn {
+    background: #f44336;
+    color: white;
+    border-color: #f44336;
+    margin-top: 20px;
+    padding: 12px 24px;
+    font-size: 14px;
+}
+
+.clear-btn:hover {
+    background: #d32f2f;
 }
 
 .x-buttons {
@@ -129,56 +154,15 @@ section { padding: 25px; }
     text-align: center;
 }
 
-.r-radios { display: flex; gap: 10px; flex-wrap: wrap; }
+.r-radios { display: flex; gap: 15px; flex-wrap: wrap; }
 
-.radio-card {
-    flex: 1;
-    min-width: 70px;
-    position: relative;
-}
-
-.radio-card input[type="radio"] {
-    position: absolute;
-    opacity: 0;
-    width: 100%;
-    height: 100%;
+.r-radios label {
+    display: flex;
+    align-items: center;
+    gap: 5px;
     cursor: pointer;
-    z-index: 2;
-}
-
-.radio-content {
-    padding: 12px 20px;
-    background: white;
-    border: 2px solid #2196F3;
-    border-radius: 5px;
-    text-align: center;
-    cursor: pointer;
-    transition: all 0.3s;
-}
-
-.radio-value { font-size: 16px; font-weight: bold; color: #2196F3; }
-
-.radio-card:hover .radio-content { background: #e3f2fd; }
-
-.radio-card input:checked + .radio-content {
-    background: #2196F3;
-}
-
-.radio-card input:checked + .radio-content .radio-value { color: white; }
-
-.submit-btn {
-    padding: 15px 30px;
-    background: #4CAF50;
-    color: white;
-    border: none;
-    border-radius: 5px;
     font-size: 16px;
-    font-weight: bold;
-    cursor: pointer;
-    margin-top: 10px;
 }
-
-.submit-btn:hover { background: #45a049; }
 
 .canvas-container {
     display: flex;
@@ -224,14 +208,36 @@ section { padding: 25px; }
     width: 100%;
     border-collapse: collapse;
     background: white;
+    table-layout: fixed;
 }
 
 .results-table th,
 .results-table td {
-    padding: 12px;
+    padding: 12px 8px;
     text-align: center;
     border-bottom: 1px solid #ddd;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
+
+.results-table th:nth-child(1),
+.results-table td:nth-child(1) { width: 10%; }
+
+.results-table th:nth-child(2),
+.results-table td:nth-child(2) { width: 15%; }
+
+.results-table th:nth-child(3),
+.results-table td:nth-child(3) { width: 10%; }
+
+.results-table th:nth-child(4),
+.results-table td:nth-child(4) { width: 15%; }
+
+.results-table th:nth-child(5),
+.results-table td:nth-child(5) { width: 25%; }
+
+.results-table th:nth-child(6),
+.results-table td:nth-child(6) { width: 15%; }
 
 .results-table th {
     background: #2196F3;
@@ -257,20 +263,6 @@ section { padding: 25px; }
     border-radius: 5px;
     margin: 15px;
 }
-
-.clear-btn {
-    margin-top: 20px;
-    padding: 12px 24px;
-    background: #f44336;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 14px;
-    font-weight: bold;
-}
-
-.clear-btn:hover { background: #d32f2f; }
 
 .modal {
     display: none;
@@ -337,6 +329,7 @@ section { padding: 25px; }
     font-size: 14px;
     font-weight: bold;
     cursor: pointer;
+    transition: all 0.3s;
 }
 
 .modal-btn-primary {
@@ -362,6 +355,7 @@ section { padding: 25px; }
     background: #ffebee;
     border: 1px solid #ffcdd2;
     margin-top: 8px;
+    transition: opacity 0.3s;
 }
 
 .error-message.show { opacity: 1; }
@@ -407,57 +401,6 @@ section { padding: 25px; }
 
 .loading-text { font-size: 16px; font-weight: bold; }
 
-.truncated-value { cursor: help; font-weight: bold; }
-
-.value-tooltip {
-    position: absolute;
-    background: white;
-    border: 2px solid #2196F3;
-    border-radius: 8px;
-    padding: 15px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-    z-index: 5000;
-    max-width: 500px;
-    font-family: 'Courier New', monospace;
-    font-size: 14px;
-    opacity: 0;
-}
-
-.value-tooltip.visible { opacity: 1; }
-
-.tooltip-header {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 10px;
-    padding-bottom: 10px;
-    border-bottom: 1px solid #ddd;
-}
-
-.tooltip-close {
-    background: #f5f5f5;
-    border: 1px solid #ddd;
-    border-radius: 50%;
-    width: 25px;
-    height: 25px;
-    cursor: pointer;
-    font-size: 18px;
-}
-
-.tooltip-close:hover { background: #e0e0e0; }
-
-.tooltip-number {
-    font-weight: bold;
-    color: #2196F3;
-    word-break: break-all;
-}
-
-.tooltip-label {
-    font-size: 11px;
-    text-transform: uppercase;
-    color: #666;
-    font-weight: bold;
-}
-
 @media (max-width: 1400px) {
     .main-container { grid-template-columns: 1fr; }
     .results-section { grid-column: 1; }
@@ -471,7 +414,6 @@ section { padding: 25px; }
         aspect-ratio: 1;
     }
     .x-buttons { grid-template-columns: repeat(3, 1fr); }
-    .r-radios { grid-template-columns: repeat(3, 1fr); }
     .main-title { font-size: 22px; }
 }
 

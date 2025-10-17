@@ -5,7 +5,6 @@ import java.math.MathContext;
 
 public class JsonParser implements RequestParser {
   private static final MathContext MC = new MathContext(100);
-  private String originalYString = null;
 
   @Override
   public BigDecimal[] getBigDecimals(String requestString) throws IllegalArgumentException {
@@ -16,8 +15,6 @@ public class JsonParser implements RequestParser {
       String xStr = parts[0].split(":")[1].trim().replace(",", ".");
       String yStr = parts[1].split(":")[1].trim().replace(",", ".");
       String rStr = parts[2].split(":")[1].trim().replace(",", ".");
-
-      this.originalYString = yStr;
 
       if (!yStr.matches("^-?\\d*\\.?\\d+$")) {
         throw new IllegalArgumentException("Y должен быть допустимым десятичным числом");
@@ -38,6 +35,6 @@ public class JsonParser implements RequestParser {
 
   @Override
   public String getOriginalYString() {
-    return originalYString;
+    return null;
   }
 }

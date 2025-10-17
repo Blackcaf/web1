@@ -2,6 +2,14 @@ let selectedX = null;
 let selectedY = null;
 let selectedR = null;
 
+const X_VALUES = [-2, -1.5, -1, -0.5, 0, 0.5, 1, 1.5, 2];
+
+function roundToNearestX(value) {
+    return X_VALUES.reduce((prev, curr) =>
+        Math.abs(curr - value) < Math.abs(prev - value) ? curr : prev
+    );
+}
+
 const STORAGE_KEY = 'web1_results';
 const MAX_RESULTS = 50;
 
@@ -35,16 +43,22 @@ const VALIDATION_RULES = {
     }
 };
 
-function validate(field) {
+function validate(field, showError = false) {
     const errorEl = document.getElementById(`${field}-error`);
     if (!errorEl) return true;
 
     const rule = VALIDATION_RULES[field];
     const isValid = rule.check();
 
-    errorEl.textContent = isValid ? '' : rule.error;
-    errorEl.classList.toggle('show', !isValid);
-    errorEl.closest('.form-group')?.classList.toggle('error', !isValid);
+    if (showError) {
+        errorEl.textContent = isValid ? '' : rule.error;
+        errorEl.classList.toggle('show', !isValid);
+        errorEl.closest('.form-group')?.classList.toggle('error', !isValid);
+    } else {
+        errorEl.textContent = '';
+        errorEl.classList.remove('show');
+        errorEl.closest('.form-group')?.classList.remove('error');
+    }
 
     return isValid;
 }
@@ -94,8 +108,8 @@ const ERROR_MESSAGES = {
     '405': 'Недопустимый метод'
 };
 
-function sendDataToServer(x, y, r, fromCanvas = false) {
-    if (!fromCanvas) showLoading(true);
+function sendDataToServer(x, y, r) {
+    showLoading(true);
 
     fetch('/calculate', {
         method: 'POST',
@@ -120,7 +134,7 @@ function sendDataToServer(x, y, r, fromCanvas = false) {
                 .find(([key]) => error.message.includes(key))?.[1] || 'Ошибка запроса';
             showModal('Ошибка', message);
         })
-        .finally(() => !fromCanvas && showLoading(false));
+        .finally(() => showLoading(false));
 }
 
 function addResultToTable(data) {
@@ -129,9 +143,15 @@ function addResultToTable(data) {
 
     const row = tbody.insertRow(0);
     row.className = data.hit ? 'hit' : 'miss';
+
+    const formatY = (yStr) => {
+        const y = parseFloat(yStr);
+        return y.toString().length > 8 ? y.toFixed(4) : yStr;
+    };
+
     row.innerHTML = `
         <td>${data.x}</td>
-        <td>${data.y}</td>
+        <td title="${data.y}">${formatY(data.y)}</td>
         <td>${data.r}</td>
         <td class="result-${data.hit ? 'hit' : 'miss'}">${data.hit ? 'Попадание' : 'Промах'}</td>
         <td>${new Date(data.currentTime).toLocaleString('ru-RU')}</td>
@@ -166,27 +186,27 @@ function clearForm() {
     selectedX = selectedY = null;
     document.querySelectorAll('.x-btn').forEach(btn => btn.classList.remove('active'));
     document.getElementById('y-input').value = '';
-    ['x', 'y', 'r'].forEach(field => validate(field));
+    ['x', 'y', 'r'].forEach(field => validate(field, false));
 }
 
 function handleFormSubmit() {
-    if (!validate('x') || !validate('y') || !validate('r')) {
+    if (!validate('x', true) || !validate('y', true) || !validate('r', true)) {
         showModal('Ошибка', 'Исправьте ошибки в форме');
         return;
     }
     sendDataToServer(selectedX, selectedY, selectedR);
 }
 
-function addPointFromCanvas(x, y) {
-    if (!selectedR) {
-        showModal('Ошибка', 'Выберите значение R');
-        return;
-    }
-    if (!/^-?\d+\.?\d*$/.test(x) || !/^-?\d+\.?\d*$/.test(y)) {
-        showModal('Ошибка', 'X и Y должны быть числами');
-        return;
-    }
-    sendDataToServer(x, y, selectedR, true);
+function fillFormFromCanvas(x, y) {
+    const roundedX = roundToNearestX(parseFloat(x));
+    selectedX = roundedX;
+    selectedY = parseFloat(y);
+
+    document.querySelectorAll('.x-btn').forEach(btn =>
+        btn.classList.toggle('active', parseFloat(btn.dataset.value) === roundedX)
+    );
+
+    document.getElementById('y-input').value = y;
 }
 
 function updateCurrentRDisplay() {
@@ -216,7 +236,6 @@ function initializeForm() {
         document.querySelectorAll('.x-btn').forEach(btn =>
             btn.classList.toggle('active', btn === e.target)
         );
-        validate('x');
     };
 
     const yInput = document.getElementById('y-input');
@@ -232,7 +251,6 @@ function initializeForm() {
     yInput.oninput = function() {
         selectedY = this.value.trim().replace(',', '.').substring(0, 100);
         this.value = selectedY;
-        validate('y');
     };
 
     yInput.onpaste = e => {
@@ -241,7 +259,6 @@ function initializeForm() {
         const cleaned = text.replace(',', '.').trim();
         if (/^-?\d*\.?\d*$/.test(cleaned)) {
             yInput.value = selectedY = cleaned;
-            validate('y');
         }
     };
 
@@ -249,7 +266,6 @@ function initializeForm() {
         if (e.target.name !== 'r') return;
         selectedR = parseFloat(e.target.value);
         updateCurrentRDisplay();
-        validate('r');
         setTimeout(() => window.drawCoordinatePlane?.(), 50);
     };
 
@@ -278,4 +294,4 @@ document.addEventListener('keydown', e => {
 });
 
 window.currentR = () => selectedR;
-window.addPointFromCanvas = addPointFromCanvas;
+window.fillFormFromCanvas = fillFormFromCanvas;

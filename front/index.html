@@ -7,7 +7,6 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-<!-- Шапка с информацией о студенте -->
 <header class="header">
     <div class="header-content">
         <div class="header-left">
@@ -25,13 +24,11 @@
 </header>
 
 <main class="main-container">
-    <!-- Форма ввода данных -->
     <section class="input-section ios-card">
         <h2 class="section-title">
             Введите координаты точки
         </h2>
         <form id="coordinateForm" class="coordinate-form">
-            <!-- Координата X - Кнопки -->
             <div class="form-group">
                 <label class="form-label">
                     Координата X:
@@ -50,7 +47,6 @@
                 <div class="error-message" id="x-error"></div>
             </div>
 
-            <!-- Координата Y - Текстовое поле -->
             <div class="form-group">
                 <label for="y-input" class="form-label">
                     Координата Y:
@@ -62,55 +58,24 @@
                 <div class="error-message" id="y-error"></div>
             </div>
 
-            <!-- Параметр R - Радио кнопки -->
             <div class="form-group">
                 <label class="form-label">
                     Параметр R:
                 </label>
                 <div class="r-radios" id="r-radios">
-                    <label class="radio-card">
-                        <input type="radio" id="r1" name="r" value="1">
-                        <div class="radio-content">
-                            <span class="radio-value">1</span>
-                        </div>
-                    </label>
-                    <label class="radio-card">
-                        <input type="radio" id="r1_5" name="r" value="1.5">
-                        <div class="radio-content">
-                            <span class="radio-value">1.5</span>
-                        </div>
-                    </label>
-                    <label class="radio-card">
-                        <input type="radio" id="r2" name="r" value="2">
-                        <div class="radio-content">
-                            <span class="radio-value">2</span>
-                        </div>
-                    </label>
-                    <label class="radio-card">
-                        <input type="radio" id="r2_5" name="r" value="2.5">
-                        <div class="radio-content">
-                            <span class="radio-value">2.5</span>
-                        </div>
-                    </label>
-                    <label class="radio-card">
-                        <input type="radio" id="r3" name="r" value="3">
-                        <div class="radio-content">
-                            <span class="radio-value">3</span>
-                        </div>
-                    </label>
+                    <label><input type="radio" name="r" value="1"> 1</label>
+                    <label><input type="radio" name="r" value="1.5"> 1.5</label>
+                    <label><input type="radio" name="r" value="2"> 2</label>
+                    <label><input type="radio" name="r" value="2.5"> 2.5</label>
+                    <label><input type="radio" name="r" value="3"> 3</label>
                 </div>
                 <div class="error-message" id="r-error"></div>
             </div>
 
-            <button type="submit" class="submit-btn">
-                    <span class="btn-content">
-                        <span class="btn-text">Проверить точку</span>
-                    </span>
-            </button>
+            <button type="submit" class="submit-btn">Проверить точку</button>
         </form>
     </section>
 
-    <!-- Координатная плоскость -->
     <section class="canvas-section ios-card">
         <h2 class="section-title">
             Координатная плоскость
@@ -130,7 +95,6 @@
         </div>
     </section>
 
-    <!-- Таблица результатов -->
     <section class="results-section ios-card">
         <h2 class="section-title">
             Результаты проверки
@@ -148,7 +112,6 @@
                 </tr>
                 </thead>
                 <tbody id="results-body">
-                <!-- Результаты будут добавляться здесь -->
                 </tbody>
             </table>
             <div id="empty-state" class="empty-state">
@@ -156,15 +119,10 @@
                 <small>Добавьте точку для начала работы</small>
             </div>
         </div>
-        <button id="clear-results" class="clear-btn">
-                <span class="btn-content">
-                    <span class="btn-text">Очистить результаты</span>
-                </span>
-        </button>
+        <button id="clear-results" class="clear-btn">Очистить результаты</button>
     </section>
 </main>
 
-<!-- Модальное окно для ошибок -->
 <div id="error-modal" class="modal">
     <div class="modal-backdrop"></div>
     <div class="modal-content">
@@ -178,7 +136,6 @@
     </div>
 </div>
 
-<!-- Загрузочный индикатор -->
 <div id="loading" class="loading">
     <div class="loading-content">
         <div class="loading-spinner"></div>

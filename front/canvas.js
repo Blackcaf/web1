@@ -22,7 +22,6 @@ function drawCoordinatePlane() {
     if (!ctx) return;
     ctx.clearRect(0, 0, CONFIG.size, CONFIG.size);
 
-    // Белый фон
     ctx.fillStyle = 'white';
     ctx.fillRect(0, 0, CONFIG.size, CONFIG.size);
 
@@ -40,7 +39,6 @@ function drawAxes() {
     ctx.strokeStyle = '#333';
     ctx.lineWidth = 2;
 
-    // Оси
     ctx.beginPath();
     ctx.moveTo(40, CONFIG.center);
     ctx.lineTo(CONFIG.size - 40, CONFIG.center);
@@ -51,10 +49,8 @@ function drawAxes() {
     ctx.lineTo(CONFIG.center, CONFIG.size - 40);
     ctx.stroke();
 
-    // Стрелки
     ctx.fillStyle = '#333';
 
-    // X
     ctx.beginPath();
     ctx.moveTo(CONFIG.size - 40, CONFIG.center);
     ctx.lineTo(CONFIG.size - 50, CONFIG.center - 5);
@@ -62,7 +58,6 @@ function drawAxes() {
     ctx.closePath();
     ctx.fill();
 
-    // Y
     ctx.beginPath();
     ctx.moveTo(CONFIG.center, 40);
     ctx.lineTo(CONFIG.center - 5, 50);
@@ -80,11 +75,9 @@ function drawAreas(r) {
     ctx.save();
     ctx.globalAlpha = 0.5;
 
-    // Прямоугольник (синий)
     ctx.fillStyle = '#2196F3';
     ctx.fillRect(CONFIG.center - halfR, CONFIG.center - rPx, halfR, rPx);
 
-    // Четверть круга (оранжевый)
     ctx.fillStyle = '#FF9800';
     ctx.beginPath();
     ctx.arc(CONFIG.center, CONFIG.center, halfR, Math.PI / 2, Math.PI);
@@ -92,7 +85,6 @@ function drawAreas(r) {
     ctx.closePath();
     ctx.fill();
 
-    // Треугольник (зеленый)
     ctx.fillStyle = '#4CAF50';
     ctx.beginPath();
     ctx.moveTo(CONFIG.center, CONFIG.center);
@@ -115,7 +107,6 @@ function drawScale() {
         const px = factor * CONFIG.scale;
         const label = factor === 1 ? 'R' : factor === -1 ? '-R' : `${factor}R`;
 
-        // X ось
         const x = CONFIG.center + px;
         if (x >= 80 && x <= CONFIG.size - 80) {
             ctx.fillText(label, x, CONFIG.center + 25);
@@ -127,7 +118,6 @@ function drawScale() {
             ctx.stroke();
         }
 
-        // Y ось
         const y = CONFIG.center - px;
         if (y >= 80 && y <= CONFIG.size - 80) {
             ctx.fillText(label, CONFIG.center - 35, y);
@@ -161,15 +151,8 @@ function drawPoint(x, y, hit) {
     ctx.save();
     ctx.fillStyle = hit ? '#4CAF50' : '#f44336';
     ctx.beginPath();
-    ctx.arc(pixelX, pixelY, 6, 0, 2 * Math.PI);
+    ctx.arc(pixelX, pixelY, 5, 0, 2 * Math.PI);
     ctx.fill();
-
-    // Белая точка в центре
-    ctx.fillStyle = 'white';
-    ctx.beginPath();
-    ctx.arc(pixelX - 2, pixelY - 2, 2, 0, 2 * Math.PI);
-    ctx.fill();
-
     ctx.restore();
 }
 
@@ -186,10 +169,20 @@ function handleCanvasClick(event) {
     const mathX = (canvasX - CONFIG.center) / CONFIG.scale;
     const mathY = -(canvasY - CONFIG.center) / CONFIG.scale;
 
+    if (mathX < -2 || mathX > 2) {
+        window.showModal?.('Ошибка', 'X должен быть в диапазоне [-2; 2]');
+        return;
+    }
+
+    if (mathY <= -3 || mathY >= 5) {
+        window.showModal?.('Ошибка', 'Y должен быть в интервале (-3; 5)');
+        return;
+    }
+
     const preciseX = mathX.toString().substring(0, 100);
     const preciseY = mathY.toString().substring(0, 100);
 
-    window.addPointFromCanvas?.(preciseX, preciseY);
+    window.fillFormFromCanvas?.(preciseX, preciseY);
 }
 
 function addPointToCanvas(x, y, hit, r) {

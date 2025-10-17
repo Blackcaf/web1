@@ -4,14 +4,20 @@ import java.math.BigDecimal;
 
 public class HitChecker implements PointValidator {
   @Override
-  public void validate(BigDecimal x, BigDecimal y, BigDecimal r) {
-    // Пустая реализация, так как валидация выполняется в Validator
-    throw new UnsupportedOperationException("Проверка не поддерживается HitChecker");
-  }
-
-  @Override
   public boolean isHit(BigDecimal x, BigDecimal y, BigDecimal r) {
     return (checkRectangle(x, y, r) || checkCircle(x, y, r) || checkTriangle(x, y, r));
+  }
+
+  public boolean isCircleHit(BigDecimal x, BigDecimal y, BigDecimal r) {
+    return checkCircle(x, y, r);
+  }
+
+  public boolean isRectangleHit(BigDecimal x, BigDecimal y, BigDecimal r) {
+    return checkRectangle(x, y, r);
+  }
+
+  public boolean isTriangleHit(BigDecimal x, BigDecimal y, BigDecimal r) {
+    return checkTriangle(x, y, r);
   }
 
   private boolean checkRectangle(BigDecimal x, BigDecimal y, BigDecimal r) {

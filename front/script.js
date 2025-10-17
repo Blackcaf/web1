@@ -83,7 +83,6 @@ function showModal(title, message, buttons = []) {
 }
 
 function sendDataToServer(x, y, r) {
-    toggleLoading(true);
     fetch('/calculate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -98,8 +97,7 @@ function sendDataToServer(x, y, r) {
             toggleEmptyState(false);
             clearForm();
         })
-        .catch(error => showModal('Ошибка', Object.entries(ERROR_MESSAGES).find(([key]) => error.message.includes(key))?.[1] || 'Ошибка запроса'))
-        .finally(() => toggleLoading(false));
+        .catch(error => showModal('Ошибка', Object.entries(ERROR_MESSAGES).find(([key]) => error.message.includes(key))?.[1] || 'Ошибка запроса'));
 }
 
 function addResultToTable(data) {
@@ -156,11 +154,6 @@ function fillFormFromCanvas(x, y) {
     selectedY = parseFloat(y);
     document.querySelectorAll('.x-btn').forEach(btn => btn.classList.toggle('active', parseFloat(btn.dataset.value) === selectedX));
     document.getElementById('y-input').value = y;
-}
-
-function toggleLoading(show) {
-    const el = document.getElementById('loading');
-    if (el) el.style.display = show ? 'flex' : 'none';
 }
 
 function toggleEmptyState(show) {

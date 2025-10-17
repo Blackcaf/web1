@@ -192,17 +192,9 @@ function addPointToCanvas(x, y, hit, r) {
     }
 }
 
-function removePointFromCanvas(x, y) {
-    points = points.filter(p => !(Math.abs(p.x - x) < 0.001 && Math.abs(p.y - y) < 0.001));
-    drawCoordinatePlane();
-}
-
 Object.assign(window, {
     drawCoordinatePlane,
     addPointToCanvas,
     clearCanvas: () => { points = []; drawCoordinatePlane(); },
-    clearAllPoints: () => { points = []; drawCoordinatePlane(); },
-    removePointFromCanvas,
-    getAllPoints: () => [...points],
     currentR: window.currentR
 });

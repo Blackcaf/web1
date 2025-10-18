@@ -1,6 +1,8 @@
 package com.nlshakal;
 
 import com.fastcgi.FCGIInterface;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.nio.ByteBuffer;
@@ -17,10 +19,9 @@ public class ResponseSender {
   private final RequestParser parser;
   private final OutputHandler outputHandler;
   private final SimpleDateFormat dateFormatter;
+  private final Gson gson;
 
-  public ResponseSender() {
-    this(new Validator(), new HitChecker(), new JsonParser(), new FastCGIOutputHandler());
-  }
+  public ResponseSender() { this(new Validator(), new HitChecker(), new JsonParsers(), new FastCGIOutputHandler());}
 
   public ResponseSender(Validator validator, HitChecker hitChecker, RequestParser parser, OutputHandler outputHandler) {
     this.validator = validator;
@@ -29,6 +30,7 @@ public class ResponseSender {
     this.outputHandler = outputHandler;
     this.dateFormatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
     this.dateFormatter.setTimeZone(TimeZone.getTimeZone("UTC"));
+    this.gson = new GsonBuilder().setPrettyPrinting().create();
   }
 
   public void sendResponse() {
@@ -94,7 +96,7 @@ public class ResponseSender {
     response.put("currentTime", dateFormatter.format(new Date()));
     response.put("scriptTimeMs", String.format("%.2f", scriptTimeMs));
 
-    sendJson(response);
+    sendJson(response, 200);
   }
 
   private boolean calculateHit(BigDecimal x, BigDecimal y, BigDecimal r, String shape) {
@@ -111,9 +113,7 @@ public class ResponseSender {
     FCGIInterface.request.inStream.fill();
     int length = FCGIInterface.request.inStream.available();
 
-    if (length <= 0) {
-      throw new IllegalArgumentException("Empty request body");
-    }
+    if (length <= 0) {throw new IllegalArgumentException("Empty request body");}
 
     ByteBuffer buffer = ByteBuffer.allocate(length);
     int readBytes = FCGIInterface.request.inStream.read(buffer.array(), 0, length);
@@ -124,21 +124,38 @@ public class ResponseSender {
     return parser.getBigDecimals(request);
   }
 
-  private void sendJson(Map<String, Object> map) {
-    sendHttpResponse(200, "OK", toJson(map));
+  private void sendJson(Map<String, Object> data, int status) {
+    String json = gson.toJson(data);
+    sendHttpResponse(status, json);
   }
 
   private void sendErrorResponse(int status, String message) {
-    String statusText = getStatusText(status);
-    String json = String.format("{\"error\":\"%s\"}", escapeJson(message));
-    sendHttpResponse(status, statusText, json);
+    Map<String, String> error = new LinkedHashMap<>();
+    error.put("error", message);
+    String json = gson.toJson(error);
+    sendHttpResponse(status, json);
   }
 
   private void sendMethodNotAllowed(String message) {
-    String json = String.format("{\"error\":\"%s\"}", escapeJson(message));
+    Map<String, String> error = new LinkedHashMap<>();
+    error.put("error", message);
+    String json = gson.toJson(error);
     String httpResponse = String.format(
         "Status: 405 Method Not Allowed\nContent-Type: application/json\nAccess-Control-Allow-Origin: *\nAllow: POST\nContent-Length: %d\n\n%s\n",
         json.getBytes(StandardCharsets.UTF_8).length, json
+    );
+    try {
+      outputHandler.send(httpResponse);
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+  }
+
+  private void sendHttpResponse(int status, String json) {
+    String statusText = getStatusText(status);
+    String httpResponse = String.format(
+        "Status: %d %s\nContent-Type: application/json\nAccess-Control-Allow-Origin: *\nContent-Length: %d\n\n%s\n",
+        status, statusText, json.getBytes(StandardCharsets.UTF_8).length, json
     );
     try {
       outputHandler.send(httpResponse);
@@ -152,48 +169,9 @@ public class ResponseSender {
       case 200: return "OK";
       case 400: return "Bad Request";
       case 404: return "Not Found";
+      case 405: return "Method Not Allowed";
       case 500: return "Internal Server Error";
       default: return "Unknown";
     }
-  }
-
-  private void sendHttpResponse(int status, String statusText, String json) {
-    String httpResponse = String.format(
-        "Status: %d %s\nContent-Type: application/json\nAccess-Control-Allow-Origin: *\nContent-Length: %d\n\n%s\n",
-        status, statusText, json.getBytes(StandardCharsets.UTF_8).length, json
-    );
-    try {
-      outputHandler.send(httpResponse);
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
-  }
-
-  private String toJson(Map<String, Object> map) {
-    StringBuilder sb = new StringBuilder("{");
-    boolean first = true;
-    for (Map.Entry<String, Object> entry : map.entrySet()) {
-      if (!first) sb.append(",");
-      first = false;
-
-      sb.append("\"").append(escapeJson(entry.getKey())).append("\":");
-      Object val = entry.getValue();
-      if (val instanceof String) {
-        sb.append("\"").append(escapeJson((String)val)).append("\"");
-      } else {
-        sb.append(val);
-      }
-    }
-    sb.append("}");
-    return sb.toString();
-  }
-
-  private String escapeJson(String str) {
-    if (str == null) return "";
-    return str.replace("\\", "\\\\")
-        .replace("\"", "\\\"")
-        .replace("\n", "\\n")
-        .replace("\r", "\\r")
-        .replace("\t", "\\t");
   }
 }

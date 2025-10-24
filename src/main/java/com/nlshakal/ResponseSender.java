@@ -2,176 +2,100 @@ package com.nlshakal;
 
 import com.fastcgi.FCGIInterface;
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.TimeZone;
+import java.util.*;
 
 public class ResponseSender {
-  private final Validator validator;
-  private final HitChecker hitChecker;
-  private final RequestParser parser;
-  private final OutputHandler outputHandler;
-  private final SimpleDateFormat dateFormatter;
-  private final Gson gson;
+  private final Validator validator = new Validator();
+  private final HitChecker hitChecker = new HitChecker();
+  private final RequestParser parser = new JsonParsers();
+  private final OutputHandler outputHandler = new FastCGIOutputHandler();
+  private final SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
+  private final Gson gson = new Gson();
 
-  public ResponseSender() { this(new Validator(), new HitChecker(), new JsonParsers(), new FastCGIOutputHandler());}
-
-  public ResponseSender(Validator validator, HitChecker hitChecker, RequestParser parser, OutputHandler outputHandler) {
-    this.validator = validator;
-    this.hitChecker = hitChecker;
-    this.parser = parser;
-    this.outputHandler = outputHandler;
-    this.dateFormatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
-    this.dateFormatter.setTimeZone(TimeZone.getTimeZone("UTC"));
-    this.gson = new GsonBuilder().setPrettyPrinting().create();
-  }
+  public ResponseSender() { dateFormatter.setTimeZone(TimeZone.getTimeZone("UTC")); }
 
   public void sendResponse() {
     try {
       long startTime = System.nanoTime();
-      String requestUri = FCGIInterface.request.params.getProperty("REQUEST_URI");
+      String uri = FCGIInterface.request.params.getProperty("REQUEST_URI");
       String method = FCGIInterface.request.params.getProperty("REQUEST_METHOD");
 
-      if (requestUri == null) {
-        sendErrorResponse(404, "Отсутствует URI запроса");
+      if (!"POST".equalsIgnoreCase(method)) {
+        sendError(405, "Только POST допустим", "Allow: POST\n");
         return;
       }
 
-      if (method == null || !"POST".equalsIgnoreCase(method)) {
-        sendMethodNotAllowed("Только POST допустим. Получен: " + method);
-        return;
-      }
-
-      String shape = extractShape(requestUri);
+      String shape = extractShape(uri);
       if (shape == null) {
-        sendErrorResponse(404, "Эндпоинт не найден. Доступные: /calculate /calculate/circle /calculate/rectangle /calculate/triangle");
+        sendError(404, "Эндпоинт не найден");
         return;
       }
 
-      handleCalculate(startTime, shape);
+      BigDecimal[] data = readRequestBody();
+      validator.validate(data[0], data[1], data[2]);
+
+      Map<String, Object> response = new LinkedHashMap<>();
+      response.put("x", data[0].toPlainString());
+      response.put("y", data[1].toPlainString());
+      response.put("r", data[2].toPlainString());
+      response.put("hit", calculateHit(data[0], data[1], data[2], shape));
+      response.put("shape", shape);
+      response.put("currentTime", dateFormatter.format(new Date()));
+      response.put("scriptTimeMs", String.format("%.2f", (System.nanoTime() - startTime) / 1000000.0));
+
+      sendJson(200, response);
     } catch (IllegalArgumentException e) {
-      sendErrorResponse(400, e.getMessage());
+      sendError(400, e.getMessage());
     } catch (Exception e) {
-      sendErrorResponse(500, "Ошибка сервера: " + e.getMessage());
+      sendError(500, "Ошибка сервера: " + e.getMessage());
     }
   }
 
   private String extractShape(String uri) {
-    if (uri.equals("/calculate")) return "all";
-    if (uri.equals("/calculate/circle")) return "circle";
-    if (uri.equals("/calculate/rectangle")) return "rectangle";
-    if (uri.equals("/calculate/triangle")) return "triangle";
+    if ("/calculate".equals(uri)) return "all";
+    if ("/calculate/circle".equals(uri)) return "circle";
+    if ("/calculate/rectangle".equals(uri)) return "rectangle";
+    if ("/calculate/triangle".equals(uri)) return "triangle";
     return null;
-  }
-
-  private void handleCalculate(long startTime, String shape) throws IOException {
-    BigDecimal[] data = readRequestBody();
-    BigDecimal x = data[0];
-    BigDecimal y = data[1];
-    BigDecimal r = data[2];
-
-    try {
-      validator.validate(x, y, r);
-    } catch (IllegalArgumentException e) {
-      sendErrorResponse(400, e.getMessage());
-      return;
-    }
-
-    boolean hit = calculateHit(x, y, r, shape);
-    double scriptTimeMs = (System.nanoTime() - startTime) / 1000000.0;
-
-    Map<String, Object> response = new LinkedHashMap<>();
-    response.put("x", x.toPlainString());
-    response.put("y", y.toPlainString());
-    response.put("r", r.toPlainString());
-    response.put("hit", hit);
-    response.put("shape", shape);
-    response.put("currentTime", dateFormatter.format(new Date()));
-    response.put("scriptTimeMs", String.format("%.2f", scriptTimeMs));
-
-    sendJson(response, 200);
   }
 
   private boolean calculateHit(BigDecimal x, BigDecimal y, BigDecimal r, String shape) {
     switch (shape) {
-      case "all": return hitChecker.isHit(x, y, r);
       case "circle": return hitChecker.isCircleHit(x, y, r);
       case "rectangle": return hitChecker.isRectangleHit(x, y, r);
       case "triangle": return hitChecker.isTriangleHit(x, y, r);
-      default: throw new IllegalArgumentException("Неизвестная фигура: " + shape);
+      default: return hitChecker.isHit(x, y, r);
     }
   }
 
   private BigDecimal[] readRequestBody() throws IOException {
     FCGIInterface.request.inStream.fill();
     int length = FCGIInterface.request.inStream.available();
+    if (length <= 0) throw new IllegalArgumentException("Пустое тело запроса");
 
-    if (length <= 0) {throw new IllegalArgumentException("Empty request body");}
-
-    ByteBuffer buffer = ByteBuffer.allocate(length);
-    int readBytes = FCGIInterface.request.inStream.read(buffer.array(), 0, length);
-    byte[] raw = new byte[readBytes];
-    buffer.get(raw);
-    String request = new String(raw, StandardCharsets.UTF_8);
-
-    return parser.getBigDecimals(request);
+    byte[] raw = new byte[length];
+    FCGIInterface.request.inStream.read(raw, 0, length);
+    return parser.getBigDecimals(new String(raw, StandardCharsets.UTF_8));
   }
 
-  private void sendJson(Map<String, Object> data, int status) {
-    String json = gson.toJson(data);
-    sendHttpResponse(status, json);
+  private void sendJson(int status, Object data) {
+    send(status, gson.toJson(data), "");
   }
 
-  private void sendErrorResponse(int status, String message) {
-    Map<String, String> error = new LinkedHashMap<>();
-    error.put("error", message);
-    String json = gson.toJson(error);
-    sendHttpResponse(status, json);
+  private void sendError(int status, String message) { sendError(status, message, ""); }
+
+  private void sendError(int status, String message, String extraHeaders) {
+    send(status, gson.toJson(Collections.singletonMap("error", message)), extraHeaders);
   }
 
-  private void sendMethodNotAllowed(String message) {
-    Map<String, String> error = new LinkedHashMap<>();
-    error.put("error", message);
-    String json = gson.toJson(error);
-    String httpResponse = String.format(
-        "Status: 405 Method Not Allowed\nContent-Type: application/json\nAccess-Control-Allow-Origin: *\nAllow: POST\nContent-Length: %d\n\n%s\n",
-        json.getBytes(StandardCharsets.UTF_8).length, json
-    );
+  private void send(int status, String json, String extraHeaders) {
     try {
-      outputHandler.send(httpResponse);
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
-  }
-
-  private void sendHttpResponse(int status, String json) {
-    String statusText = getStatusText(status);
-    String httpResponse = String.format(
-        "Status: %d %s\nContent-Type: application/json\nAccess-Control-Allow-Origin: *\nContent-Length: %d\n\n%s\n",
-        status, statusText, json.getBytes(StandardCharsets.UTF_8).length, json
-    );
-    try {
-      outputHandler.send(httpResponse);
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
-  }
-
-  private String getStatusText(int status) {
-    switch (status) {
-      case 200: return "OK";
-      case 400: return "Bad Request";
-      case 404: return "Not Found";
-      case 405: return "Method Not Allowed";
-      case 500: return "Internal Server Error";
-      default: return "Unknown";
-    }
+      outputHandler.send(String.format("Status: %d\nContent-Type: application/json\nAccess-Control-Allow-Origin: *\n%sContent-Length: %d\n\n%s\n",
+          status, extraHeaders, json.getBytes(StandardCharsets.UTF_8).length, json));
+    } catch (IOException e) { e.printStackTrace(); }
   }
 }
